@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Vrai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#89CFF0',
+                        'primary-dark': '#7ab8d9',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Playfair Display', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- Shared Navigation and Authentication -->
+    <script src="shared-navigation.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen bg-[#EAF6FC] font-sans text-[#1A1A1A] antialiased">
+    <div class="w-full max-w-md mx-auto pb-20">
+        <!-- Header -->
+        <div class="px-4 pt-8 pb-6">
+            <h1 class="font-display text-2xl font-semibold text-gray-900 mb-1">Settings</h1>
+            <p class="text-gray-600 text-sm">Customize your experience</p>
+        </div>
+
+        <!-- User Info Card -->
+        <div class="mx-4 mb-6">
+            <a href="edit-profile.html" class="block">
+                <div class="bg-white rounded-xl p-4 shadow-sm cursor-pointer">
+                <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <!-- Profile Icon Container -->
+                            <div class="relative">
+                                <div id="profileIcon" class="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium text-sm overflow-hidden">
+                                    <span id="userInitials">SJ</span>
+                                    <img id="profileImage" class="w-full h-full object-cover hidden" alt="Profile Photo">
+                                </div>
+                                <!-- Photo Upload Button -->
+                                <label for="profilePhotoInput" class="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center cursor-pointer shadow-sm hover:bg-primary-dark transition-colors">
+                                    <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </label>
+                                <input type="file" id="profilePhotoInput" class="hidden" accept="image/*">
+                            </div>
+                            <!-- User Info -->
+                    <div>
+                        <h3 id="userDisplayName" class="font-medium text-gray-900">Loading...</h3>
+                        <p id="userEmail" class="text-sm text-gray-500">Loading...</p>
+                        <p id="userIdDisplay" class="text-xs text-gray-400 mt-1"></p>
+                            </div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                        <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" fill="currentColor"/>
+                    </svg>
+                </div>
+            </div>
+            </a>
+        </div>
+
+        <!-- Account Section -->
+        <div class="mx-4 mb-6">
+            <h2 class="font-display text-lg font-semibold text-gray-900 mb-3">Account</h2>
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="border-b border-gray-100">
+                    <a href="profile-settings.html" class="flex items-center justify-between p-4 cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="currentColor"/>
+                            </svg>
+                            <span class="text-gray-900">Account & Security</span>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                            <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" fill="currentColor"/>
+                        </svg>
+                    </a>
+                </div>
+                <div class="border-b border-gray-100">
+                    <div class="flex items-center justify-between p-4">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.37 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5S10.5 3.17 10.5 4V4.68C7.64 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16ZM16 17H8V11C8 8.52 9.51 6.5 12 6.5S16 8.52 16 11V17Z" fill="currentColor"/>
+                            </svg>
+                        <span class="text-gray-900">Push Notifications</span>
+                        </div>
+                        <div class="relative">
+                            <input type="checkbox" id="notifications" class="sr-only" checked>
+                            <label for="notifications" class="block w-12 h-6 bg-gray-200 rounded-full cursor-pointer transition-colors">
+                                <div class="w-5 h-5 bg-white rounded-full shadow-sm transform translate-x-1 translate-y-0.5 transition-transform"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between p-4">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="currentColor"/>
+                            </svg>
+                        <span class="text-gray-900">Face ID / Touch ID</span>
+                        </div>
+                        <div class="relative">
+                            <input type="checkbox" id="biometric" class="sr-only">
+                            <label for="biometric" class="block w-12 h-6 bg-gray-200 rounded-full cursor-pointer transition-colors">
+                                <div class="w-5 h-5 bg-white rounded-full shadow-sm transform translate-x-1 translate-y-0.5 transition-transform"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Support Section -->
+        <div class="mx-4 mb-6">
+            <h2 class="font-display text-lg font-semibold text-gray-900 mb-3">Support</h2>
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="border-b border-gray-100">
+                    <a href="help-center.html" class="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V11H13V17ZM13 9H11V7H13V9Z" fill="currentColor"/>
+                            </svg>
+                        <span class="text-gray-900">Help Center</span>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                            <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" fill="currentColor"/>
+                        </svg>
+                    </a>
+                </div>
+                <div class="border-b border-gray-100">
+                    <a href="contact-support.html" class="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z" fill="currentColor"/>
+                            </svg>
+                        <span class="text-gray-900">Contact Support</span>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                            <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" fill="currentColor"/>
+                        </svg>
+                    </a>
+                </div>
+                <div>
+                    <a href="report-problem.html" class="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V11H13V17ZM13 9H11V7H13V9Z" fill="currentColor"/>
+                            </svg>
+                        <span class="text-gray-900">Report a Problem</span>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                            <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" fill="currentColor"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legal Section -->
+        <div class="mx-4 mb-6">
+            <h2 class="font-display text-lg font-semibold text-gray-900 mb-3">Legal</h2>
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="border-b border-gray-100">
+                    <a href="terms-of-service.html" class="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.89 22 5.99 22H18C20.1 22 22 20.1 22 18V8L14 2ZM16 18H8V16H16V18ZM16 14H8V12H16V14ZM13 9V3.5L18.5 9H13Z" fill="currentColor"/>
+                            </svg>
+                        <span class="text-gray-900">Terms of Service</span>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                            <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" fill="currentColor"/>
+                        </svg>
+                    </a>
+                </div>
+                <div>
+                    <a href="privacy-policy.html" class="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="currentColor"/>
+                            </svg>
+                        <span class="text-gray-900">Privacy Policy</span>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                            <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" fill="currentColor"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Out -->
+        <div class="mx-4 mb-6">
+            <button onclick="logout()" class="w-full text-white font-medium py-3 px-4 rounded-lg text-base bg-primary hover:bg-primary-dark transition-colors cursor-pointer">
+                Log Out
+            </button>
+        </div>
+
+        <!-- App Version -->
+        <div class="mx-4 mb-8">
+            <p class="text-center text-xs text-gray-400">App Version: v1.0.0</p>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-gray-100 py-3 px-4 shadow-sm z-50">
+        <div class="flex justify-around items-center">
+            <!-- Dashboard -->
+            <a href="#" id="dashboard-link" class="flex flex-col items-center justify-center text-xs font-medium text-gray-400">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 13H11V3H3V13ZM3 21H11V15H3V21ZM13 21H21V11H13V21ZM13 3V9H21V3H13Z" fill="currentColor"/>
+                </svg>
+                <span class="mt-1">Dashboard</span>
+            </a>
+            <!-- Authenticate -->
+            <a href="authenticate-guide.html" class="flex flex-col items-center justify-center text-xs font-medium text-gray-400">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 15.2C13.7673 15.2 15.2 13.7673 15.2 12C15.2 10.2327 13.7673 8.8 12 8.8C10.2327 8.8 8.8 10.2327 8.8 12C8.8 13.7673 10.2327 15.2 12 15.2ZM12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17ZM12 4.5C12.8284 4.5 13.5 3.82843 13.5 3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3C10.5 3.82843 11.1716 4.5 12 4.5ZM19 4.5C19.8284 4.5 20.5 3.82843 20.5 3C20.5 2.17157 19.8284 1.5 19 1.5C18.1716 1.5 17.5 2.17157 17.5 3C17.5 3.82843 18.1716 4.5 19 4.5ZM21 19H3C2.45 19 2 18.55 2 18V6C2 5.45 2.45 5 3 5H7L9 3H15L17 5H21C21.55 5 22 5.45 22 6V18C22 18.55 21.55 19 21 19ZM20 17H4V7H20V17Z" fill="currentColor"/>
+                </svg>
+                <span class="mt-1">Authenticate</span>
+            </a>
+            <!-- Settings -->
+            <a href="settings.html" class="flex flex-col items-center justify-center text-xs font-medium text-[#89CFF0]">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <path d="M19.14 12.94C19.18 12.64 19.2 12.33 19.2 12C19.2 11.68 19.18 11.36 19.13 11.06L21.16 9.48C21.34 9.34 21.39 9.07 21.28 8.87L19.36 5.55C19.24 5.33 18.99 5.26 18.77 5.33L16.38 6.29C15.88 5.91 15.35 5.59 14.76 5.35L14.4 2.81C14.36 2.57 14.16 2.4 13.92 2.4H10.08C9.84 2.4 9.65 2.57 9.61 2.81L9.25 5.35C8.66 5.59 8.12 5.92 7.63 6.29L5.24 5.33C5.02 5.25 4.77 5.33 4.65 5.55L2.74 8.87C2.62 9.08 2.66 9.34 2.86 9.48L4.89 11.06C4.84 11.36 4.8 11.69 4.8 12C4.8 12.31 4.82 12.64 4.87 12.94L2.84 14.52C2.66 14.66 2.61 14.93 2.72 15.13L4.64 18.45C4.76 18.67 5.01 18.74 5.23 18.67L7.62 17.71C8.12 18.09 8.65 18.41 9.24 18.65L9.6 21.19C9.65 21.43 9.84 21.6 10.08 21.6H13.92C14.16 21.6 14.36 21.43 14.39 21.19L14.75 18.65C15.34 18.41 15.88 18.09 16.37 17.71L18.76 18.67C18.98 18.75 19.23 18.67 19.35 18.45L21.27 15.13C21.39 14.91 21.34 14.66 21.15 14.52L19.14 12.94ZM12 15.6C10.02 15.6 8.4 13.98 8.4 12C8.4 10.02 10.02 8.4 12 8.4C13.98 8.4 15.6 10.02 15.6 12C15.6 13.98 13.98 15.6 12 15.6Z" fill="currentColor"/>
+                </svg>
+                <span class="mt-1">Settings</span>
+            </a>
+            <!-- Admin -->
+            <a href="admin.html" id="admin-nav-item" class="flex flex-col items-center justify-center text-xs font-medium text-gray-400 hidden">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 4L13.5 7H7V9H13.5L15 12L21 9ZM16 12C17.1 12 18 12.9 18 14S17.1 16 16 16 14 15.1 14 14 14.9 12 16 12ZM8 12C9.1 12 10 12.9 10 14S9.1 16 8 16 6 15.1 6 14 6.9 12 8 12ZM12 14C13.1 14 14 14.9 14 16S13.1 18 12 18 10 17.1 10 16 10.9 14 12 14ZM12 20C16.4 20 20 16.4 20 12S16.4 4 12 4 4 7.6 4 12 7.6 20 12 20Z" fill="currentColor"/>
+                </svg>
+                <span class="mt-1">Admin</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Initialize Supabase client
+        const supabaseUrl = 'https://gyxakkxotjkdsjvbufiv.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5eGFra3hvdGprZHNqdmJ1Zml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMjc1MTMsImV4cCI6MjA2NzcwMzUxM30.RT0VJKgdYSUJXzA34diTOpCvenMT6qjMfHaLmCAvEpk';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Session state validation and navigation management
+        function validateSession() {
+            // Check both sessionStorage and localStorage
+            const userEmail = sessionStorage.getItem('userEmail') || localStorage.getItem('userEmail');
+            const userId = sessionStorage.getItem('userId') || localStorage.getItem('userId');
+            const isAdmin = sessionStorage.getItem('isAdmin') || localStorage.getItem('isAdmin');
+            
+            // If no session data, redirect to login
+            if (!userEmail || !userId) {
+                console.log('No session found, redirecting to login...');
+                
+                // Don't redirect if already on login page
+                if (!window.location.pathname.includes('index.html')) {
+                window.location.href = 'index.html';
+                }
+                return false;
+            }
+            
+            // Ensure all data is synchronized between sessionStorage and localStorage
+            const keys = ['userEmail', 'userId', 'displayName', 'isAdmin'];
+            keys.forEach(key => {
+                // Copy from localStorage to sessionStorage if missing
+                if (!sessionStorage.getItem(key) && localStorage.getItem(key)) {
+                    sessionStorage.setItem(key, localStorage.getItem(key));
+                }
+                
+                // Copy from sessionStorage to localStorage if missing
+                if (!localStorage.getItem(key) && sessionStorage.getItem(key)) {
+                    localStorage.setItem(key, sessionStorage.getItem(key));
+                }
+            });
+            
+            console.log(`Session validated: User=${userEmail}, Admin=${isAdmin === 'true'}`);
+            return true;
+        }
+
+        // Prevent navigation to broken pages
+        function setupNavigationChecks() {
+            // Check for any links that might point to deleted files
+            const allLinks = document.querySelectorAll('a[href]');
+            allLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href === 'authentication-submissions.html') {
+                    console.warn('Found broken link to deleted file, fixing...');
+                    link.href = 'authenticate-guide.html';
+                }
+            });
+        }
+
+        /**
+         * Profile Management Functions
+         */
+        
+        // Load user profile data from Supabase Auth
+        async function loadUserProfile() {
+            try {
+                console.log('🔍 Loading user profile from Supabase Auth...');
+                
+                // Get current user from Supabase Auth
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                
+                if (authError) {
+                    console.warn('⚠️ Supabase Auth error:', authError);
+                    console.log('🔄 Falling back to localStorage-based session...');
+                    throw new Error('FALLBACK_TO_LOCALSTORAGE');
+                }
+                
+                if (!user) {
+                    console.warn('⚠️ No user logged in via Supabase Auth');
+                    console.log('🔄 Falling back to localStorage-based session...');
+                    throw new Error('FALLBACK_TO_LOCALSTORAGE');
+                }
+                
+                console.log('📝 Found authenticated user:', user.id);
+                console.log('📊 User details:', {
+                    id: user.id,
+                    email: user.email,
+                    created_at: user.created_at
+                });
+                
+                try {
+                    // Fetch profile directly from Supabase profiles table
+                    const { data: profile, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', user.id)
+                        .single();
+                    
+                    console.log('📊 Supabase profile response:', profile);
+                    
+                    if (profileError) {
+                        throw new Error(`Failed to fetch profile: ${profileError.message}`);
+                    }
+                    
+                    if (!profile) {
+                        throw new Error('No profile found for this user');
+                    }
+                    
+                    console.log('✅ Profile loaded successfully from Supabase:', profile);
+                    
+                    // Update UI elements with profile data
+                    updateProfileDisplay(profile);
+                    
+                    // Store updated profile data in localStorage for fallback
+                    localStorage.setItem('userId', user.id);
+                    localStorage.setItem('displayName', profile.display_name || '');
+                    localStorage.setItem('userEmail', profile.email || '');
+                    if (profile.avatar_url) {
+                        localStorage.setItem('userProfilePhoto', profile.avatar_url);
+                    }
+                    
+                    return profile;
+                } catch (apiError) {
+                    console.warn('⚠️ API error:', apiError);
+                    console.log('🔄 Using user data without API call...');
+                    
+                    // Create a basic profile from user data
+                    const basicProfile = {
+                        id: user.id,
+                        email: user.email,
+                        display_name: localStorage.getItem('displayName') || sessionStorage.getItem('displayName') || 'User'
+                    };
+                    
+                    // Update UI with what we have
+                    updateProfileDisplay(basicProfile);
+                    return basicProfile;
+                }
+                
+            } catch (error) {
+                console.log('❌ Supabase Auth profile loading failed:', error.message);
+                
+                // If this is a fallback request or Supabase Auth not available, use localStorage
+                if (error.message === 'FALLBACK_TO_LOCALSTORAGE' || !error.message.includes('fetch')) {
+                    console.log('🔄 Using localStorage-based session data...');
+                    
+                    // Check localStorage for session data
+                    const storedUserId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+                    const storedEmail = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail');
+                    const storedDisplayName = localStorage.getItem('displayName') || sessionStorage.getItem('displayName');
+                    
+                    if (storedUserId && storedEmail) {
+                        console.log('📝 Found localStorage session:', {
+                            userId: storedUserId,
+                            email: storedEmail,
+                            displayName: storedDisplayName
+                        });
+                        
+                        // Try to fetch profile from Supabase using stored user ID
+                        try {
+                            const { data: profile, error: profileError } = await supabase
+                                .from('profiles')
+                                .select('*')
+                                .eq('id', storedUserId)
+                                .single();
+                            
+                            if (profileError) {
+                                console.warn('⚠️ Supabase profile error:', profileError);
+                                throw profileError;
+                            }
+                            
+                            if (profile) {
+                                console.log('✅ Profile loaded from localStorage session:', profile);
+                                updateProfileDisplay(profile);
+                                return profile;
+                            } else {
+                                throw new Error('No profile found');
+                            }
+                        } catch (fetchError) {
+                            console.warn('⚠️ Failed to fetch profile with stored userId:', fetchError);
+                            // Continue to fallback data below
+                        }
+                    }
+                    
+                    // Final fallback to stored display data (ensure id is present)
+                    const fallbackData = {
+                        id: storedUserId || '',
+                        display_name: storedDisplayName || 'User',
+                        email: storedEmail || 'user@example.com',
+                        avatar_url: localStorage.getItem('userProfilePhoto') || null
+                    };
+                    
+                    console.log('🔄 Using fallback profile data:', fallbackData);
+                    updateProfileDisplay(fallbackData);
+                    return fallbackData;
+                }
+                
+                // For other errors, try to use localStorage data instead of redirecting
+                const storedUserId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+                const storedEmail = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail');
+                const storedDisplayName = localStorage.getItem('displayName') || sessionStorage.getItem('displayName');
+                
+                if (storedUserId && storedEmail) {
+                    const fallbackData = {
+                        id: storedUserId,
+                        display_name: storedDisplayName || 'User',
+                        email: storedEmail,
+                        avatar_url: localStorage.getItem('userProfilePhoto') || null
+                    };
+                    
+                    console.log('🔄 Using emergency fallback data:', fallbackData);
+                    updateProfileDisplay(fallbackData);
+                    return fallbackData;
+                }
+                
+                // Only redirect if we have absolutely no user data
+                console.log('🚨 Critical authentication error, redirecting to login...');
+                window.location.href = 'index.html';
+                return;
+            }
+        }
+        
+        // Update profile display elements
+        function updateProfileDisplay(profile) {
+            console.log('🎨 Updating profile display with:', profile);
+            
+            // Update display name
+            const displayNameElement = document.getElementById('userDisplayName');
+            if (displayNameElement) {
+                displayNameElement.textContent = profile.display_name || 'User';
+            }
+            
+            // Update email
+            const emailElement = document.getElementById('userEmail');
+            if (emailElement) {
+                emailElement.textContent = profile.email || 'user@example.com';
+            }
+            
+            // Update user ID display
+            const userIdDisplay = document.getElementById('userIdDisplay');
+            const userId = profile.id || localStorage.getItem('userId') || sessionStorage.getItem('userId');
+            if (userIdDisplay && userId) {
+                userIdDisplay.textContent = `ID: ${userId}`;
+            }
+            
+            // Update profile photo if available
+            const profileImage = document.getElementById('profileImage');
+            const userInitials = document.getElementById('userInitials');
+            
+            if (profile.avatar_url) {
+                console.log('🖼️ Setting profile image:', profile.avatar_url);
+                profileImage.src = profile.avatar_url;
+                profileImage.classList.remove('hidden');
+                userInitials.classList.add('hidden');
+            } else {
+                console.log('👤 No avatar, showing initials');
+                // Show initials based on display name
+                const initials = getUserInitials(profile.display_name || 'User');
+                userInitials.textContent = initials;
+                userInitials.classList.remove('hidden');
+                profileImage.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Function to get user initials from name
+         * @param {string} name - User's name
+         * @returns {string} - User's initials (1-2 characters)
+         */
+        function getUserInitials(name) {
+          if (!name) return 'U';
+          const words = name.trim().split(' ');
+          if (words.length === 1) return words[0].charAt(0).toUpperCase();
+          return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+        }
+
+        // Profile photo upload functionality
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Validate session first
+            if (!validateSession()) {
+                return; // Will redirect to login
+            }
+            
+            // Setup navigation checks
+            setupNavigationChecks();
+            
+            // Set proper dashboard link based on admin status
+            const dashboardLink = document.getElementById('dashboard-link');
+            const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+            dashboardLink.href = isAdmin ? 'dashboard-admin.html' : 'dashboard.html';
+            
+            // Show admin navigation item if user is admin
+            const adminNavItem = document.getElementById('admin-nav-item');
+            if (isAdmin && adminNavItem) {
+                adminNavItem.classList.remove('hidden');
+            }
+            
+            // Add click handler to dashboard link with session check
+            dashboardLink.addEventListener('click', function(e) {
+                if (!validateSession()) {
+                    e.preventDefault();
+                    return;
+                }
+                // Update href to ensure it's correct
+                this.href = sessionStorage.getItem('isAdmin') === 'true' ? 'dashboard-admin.html' : 'dashboard.html';
+            });
+            
+            // Load user profile from Supabase
+            console.log('🚀 Initializing profile loading...');
+            await loadUserProfile();
+            
+            const profilePhotoInput = document.getElementById('profilePhotoInput');
+            const profileImage = document.getElementById('profileImage');
+            const userInitials = document.getElementById('userInitials');
+            const profileIcon = document.getElementById('profileIcon');
+
+            // Check if user has a saved profile photo
+            const savedProfilePhoto = localStorage.getItem('userProfilePhoto');
+            if (savedProfilePhoto) {
+                profileImage.src = savedProfilePhoto;
+                profileImage.classList.remove('hidden');
+                userInitials.classList.add('hidden');
+            }
+
+            // Handle profile photo upload
+            profilePhotoInput.addEventListener('change', async function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    // Validate file type
+                    if (!file.type.startsWith('image/')) {
+                        alert('Please select an image file.');
+                        return;
+                    }
+
+                    // Validate file size (max 5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('Please select an image smaller than 5MB.');
+                        return;
+                    }
+
+                    try {
+                        // Show loading state
+                        const originalText = profileIcon.innerHTML;
+                        profileIcon.innerHTML = '<div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>';
+
+                        // Get current user from Supabase Auth
+                        const { data: { user }, error: authError } = await supabase.auth.getUser();
+                        
+                        if (authError || !user) {
+                            throw new Error('Authentication error. Please log in again.');
+                        }
+                        
+                        const userId = user.id;
+                        console.log('🔍 Uploading avatar for user:', userId);
+                        
+                        // Create a unique filename with timestamp and user ID
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `${userId}_${Date.now()}.${fileExt}`;
+                        const filePath = `${userId}/${fileName}`;
+                        
+                        // Upload file to Supabase Storage
+                        const { data: uploadData, error: uploadError } = await supabase.storage
+                            .from('avatars')
+                            .upload(filePath, file, {
+                                cacheControl: '3600',
+                                upsert: true
+                            });
+                        
+                        if (uploadError) {
+                            throw new Error(`Upload failed: ${uploadError.message}`);
+                        }
+                        
+                        console.log('✅ File uploaded successfully:', uploadData.path);
+                        
+                        // Get the public URL of the uploaded file
+                        const { data: urlData } = supabase.storage
+                            .from('avatars')
+                            .getPublicUrl(filePath);
+                        
+                        const avatarUrl = urlData.publicUrl;
+                        console.log('🔗 Avatar public URL:', avatarUrl);
+                        
+                        // Update the user's profile with the new avatar URL
+                        const { error: updateError } = await supabase
+                            .from('profiles')
+                            .update({ avatar_url: avatarUrl })
+                            .eq('id', userId);
+                        
+                        if (updateError) {
+                            throw new Error(`Profile update failed: ${updateError.message}`);
+                        }
+                        
+                        console.log('✅ Profile updated with new avatar URL');
+                        
+                        // Save avatar URL to localStorage for future use
+                        localStorage.setItem('userProfilePhoto', avatarUrl);
+                        
+                        // Update display
+                        profileImage.src = avatarUrl;
+                        profileImage.classList.remove('hidden');
+                        userInitials.classList.add('hidden');
+                        
+                        console.log('🎉 Avatar upload and profile update completed successfully');
+                        
+                    } catch (error) {
+                        console.error('❌ Avatar upload error:', error);
+                        alert('Failed to upload avatar: ' + error.message);
+                        
+                        // Restore original display
+                        profileIcon.innerHTML = originalText;
+                    }
+                }
+            });
+        });
+
+        // Toggle switch functionality
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const label = this.nextElementSibling;
+                const toggle = label.querySelector('div');
+                
+                if (this.checked) {
+                    label.classList.remove('bg-gray-200');
+                    label.classList.add('bg-primary');
+                    toggle.classList.remove('translate-x-1');
+                    toggle.classList.add('translate-x-6');
+                } else {
+                    label.classList.remove('bg-primary');
+                    label.classList.add('bg-gray-200');
+                    toggle.classList.remove('translate-x-6');
+                    toggle.classList.add('translate-x-1');
+                }
+            });
+        });
+
+        // Initialize toggle states
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+                const label = checkbox.nextElementSibling;
+                const toggle = label.querySelector('div');
+                
+                label.classList.remove('bg-gray-200');
+                label.classList.add('bg-primary');
+                toggle.classList.remove('translate-x-1');
+                toggle.classList.add('translate-x-6');
+            });
+        });
+
+        // Logout functionality
+        function logout() {
+            // Clear all session data
+            sessionStorage.clear();
+            localStorage.clear();
+            
+            console.log('User logged out successfully');
+            
+            // Redirect to login page
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html> 

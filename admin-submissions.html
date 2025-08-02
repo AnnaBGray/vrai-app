@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Submissions - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#B0D6F8',
+                        'primary-dark': '#89CFF0',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen bg-[#F9FAFB] font-sans text-[#1A1A1A] antialiased">
+    <div class="w-full max-w-md mx-auto min-h-screen bg-[#F9FAFB]">
+        <!-- Top App Bar -->
+        <div class="bg-white shadow-sm sticky top-0 z-10">
+            <div class="flex items-center justify-between px-6 py-4">
+                <button onclick="history.back()" class="p-2 -ml-2 rounded-full">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <h1 class="text-lg font-semibold text-gray-900">All Submissions</h1>
+                <button onclick="toggleSearch()" class="p-2 -mr-2 rounded-full">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Bar (Collapsible) -->
+        <div id="searchBar" class="hidden bg-white border-b border-gray-200 px-4 py-3">
+            <div class="space-y-3">
+                <input id="searchInput" type="text" placeholder="Search by User Email or Submission ID..." class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                <div class="flex space-x-2">
+                    <button onclick="performSearch()" class="flex-1 bg-primary-dark text-white font-medium py-2 px-4 rounded-lg text-sm">
+                        Search
+                    </button>
+                    <button onclick="toggleSearch()" class="flex-1 bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Tabs -->
+        <div class="bg-white border-b border-gray-200">
+            <div class="flex px-4">
+                <button onclick="switchTab('all')" id="tab-all" class="flex-1 py-3 px-2 text-sm font-medium text-gray-500 border-b-2 border-transparent">
+                    All
+                </button>
+                <button onclick="switchTab('pending')" id="tab-pending" class="flex-1 py-3 px-2 text-sm font-medium text-primary-dark border-b-2 border-primary-dark transition-colors">
+                    Pending
+                </button>
+                <button onclick="switchTab('approved')" id="tab-approved" class="flex-1 py-3 px-2 text-sm font-medium text-gray-500 border-b-2 border-transparent">
+                    Approved
+                </button>
+                <button onclick="switchTab('rejected')" id="tab-rejected" class="flex-1 py-3 px-2 text-sm font-medium text-gray-500 border-b-2 border-transparent">
+                    Rejected
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Container -->
+        <div class="px-4 py-4">
+            <!-- All Submissions -->
+            <div id="content-all" class="hidden space-y-3">
+                <div id="all-submissions-container">
+                    <div class="flex justify-center py-8">
+                        <svg class="animate-spin h-8 w-8 text-primary-dark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Submissions -->
+            <div id="content-pending" class="space-y-3">
+                <!-- Pending submissions will be loaded here -->
+                <div id="pending-submissions-container">
+                    <div class="flex justify-center py-8">
+                        <svg class="animate-spin h-8 w-8 text-primary-dark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approved Submissions -->
+            <div id="content-approved" class="hidden space-y-3">
+                <div id="approved-submissions-container">
+                    <div class="flex justify-center py-8">
+                        <svg class="animate-spin h-8 w-8 text-primary-dark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rejected Submissions -->
+            <div id="content-rejected" class="hidden space-y-3">
+                <div id="rejected-submissions-container">
+                    <div class="flex justify-center py-8">
+                        <svg class="animate-spin h-8 w-8 text-primary-dark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom padding for navigation -->
+        <div class="h-20"></div>
+    </div>
+
+    <!-- Supabase Initialization -->
+    <script src="supabase-init.js"></script>
+    <script src="supabase-auth.js"></script>
+
+    <script>
+        // Use the global Supabase client that's initialized in supabase-init.js
+        let currentTab = 'pending'; // Track the current tab
+
+        function toggleSearch() {
+            const searchBar = document.getElementById('searchBar');
+            searchBar.classList.toggle('hidden');
+            
+            // Clear search input when hiding the search bar
+            if (searchBar.classList.contains('hidden')) {
+                document.getElementById('searchInput').value = '';
+                // Reload the current tab data without search filter
+                const container = document.getElementById(`${currentTab}-submissions-container`);
+                container.removeAttribute('data-loaded');
+                loadSubmissions(currentTab);
+            }
+        }
+        
+        // Perform search across all submissions
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            
+            if (!searchTerm) {
+                alert('Please enter a search term');
+                return;
+            }
+            
+            // Switch to "all" tab for search results
+            switchTab('all', true);
+            
+            // Load search results
+            loadSubmissions('all', searchTerm);
+        }
+
+        // Add event listener for Enter key on search input
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+        });
+
+        // Load submissions from Supabase based on status filter
+        async function loadSubmissions(status = 'pending', searchTerm = null) {
+            const container = document.getElementById(`${status}-submissions-container`);
+            
+            // Check if Supabase client is available
+            if (!window.supabaseClient) {
+                console.error('Supabase client not initialized');
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-red-500">Error: Supabase client not initialized. Please refresh the page.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                // Show loading indicator
+                container.innerHTML = `
+                    <div class="flex justify-center py-8">
+                        <svg class="animate-spin h-8 w-8 text-primary-dark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                `;
+                
+                let query = window.supabaseClient
+                    .from('authentication_requests')
+                    .select('id, human_readable_id, model_name, created_at, status, user_email')
+                    .order('created_at', { ascending: false });
+                
+                // Apply search filter if provided
+                if (searchTerm) {
+                    // Use .or() with .ilike() for case-insensitive partial matching on both fields
+                    query = query.or(`user_email.ilike.%${searchTerm}%,human_readable_id.ilike.%${searchTerm}%`);
+                } 
+                // Apply status filter if not searching or if we're searching within a specific tab
+                else if (status !== 'all') {
+                    switch (status) {
+                        case 'pending':
+                            query = query.in('status', ['Pending Review', 'Action Required']);
+                            break;
+                        case 'approved':
+                            query = query.eq('status', 'Authenticated');
+                            break;
+                        case 'rejected':
+                            query = query.eq('status', 'Rejected');
+                            break;
+                        default:
+                            // No filter for 'all' tab
+                            break;
+                    }
+                }
+                
+                const { data, error } = await query;
+                
+                if (error) throw error;
+                
+                // Clear loading indicator
+                container.innerHTML = '';
+                
+                if (data.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8">
+                            <p class="text-gray-500">
+                                ${searchTerm 
+                                    ? `No results found for "${searchTerm}"` 
+                                    : `No ${status === 'all' ? '' : status} submissions found.`}
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // If searching, show the search term and result count
+                if (searchTerm) {
+                    const searchInfoElement = document.createElement('div');
+                    searchInfoElement.className = 'mb-4 text-sm text-gray-600';
+                    searchInfoElement.innerHTML = `
+                        <p>Showing ${data.length} result${data.length !== 1 ? 's' : ''} for "${searchTerm}"</p>
+                        <button onclick="clearSearch()" class="text-primary-dark hover:underline">Clear search</button>
+                    `;
+                    container.appendChild(searchInfoElement);
+                }
+                
+                // Create HTML for each submission
+                data.forEach(submission => {
+                    const submissionElement = document.createElement('div');
+                    submissionElement.className = 'bg-white rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow';
+                    submissionElement.onclick = function() {
+                        window.location.href = `admin-submission-detail.html?submission_id=${submission.id}`;
+                    };
+                    
+                    // Determine status badge based on submission status
+                    let statusBadge = '';
+                    switch (submission.status) {
+                        case 'Pending Review':
+                            statusBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending Review</span>';
+                            break;
+                        case 'Action Required':
+                            statusBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">Action Required</span>';
+                            break;
+                        case 'Authenticated':
+                            statusBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Authenticated</span>';
+                            break;
+                        case 'Rejected':
+                            statusBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Rejected</span>';
+                            break;
+                        default:
+                            statusBadge = `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">${submission.status}</span>`;
+                    }
+                    
+                    submissionElement.innerHTML = `
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <p class="text-xs font-medium text-gray-500">${submission.human_readable_id || 'N/A'}</p>
+                                <h3 class="text-sm font-semibold text-gray-900 mt-1">${submission.model_name || 'Unknown Product'}</h3>
+                                <p class="text-xs text-gray-500 mt-1">${formatDate(submission.created_at)}</p>
+                                <p class="text-xs text-gray-500">${submission.user_email || 'No email'}</p>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                    `;
+                    
+                    container.appendChild(submissionElement);
+                });
+                
+                // Mark as loaded
+                container.setAttribute('data-loaded', 'true');
+                
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-red-500">Error loading submissions: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Clear search and reload current tab
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            const container = document.getElementById(`${currentTab}-submissions-container`);
+            container.removeAttribute('data-loaded');
+            loadSubmissions(currentTab);
+        }
+
+        function switchTab(status, forceReload = false) {
+            // Update current tab tracker
+            currentTab = status;
+            
+            // Hide all content sections
+            document.getElementById('content-all').classList.add('hidden');
+            document.getElementById('content-pending').classList.add('hidden');
+            document.getElementById('content-approved').classList.add('hidden');
+            document.getElementById('content-rejected').classList.add('hidden');
+
+            // Reset all tab styles
+            const tabs = ['all', 'pending', 'approved', 'rejected'];
+            tabs.forEach(tab => {
+                const tabElement = document.getElementById(`tab-${tab}`);
+                tabElement.classList.remove('text-primary-dark', 'border-primary-dark');
+                tabElement.classList.add('text-gray-500', 'border-transparent');
+            });
+
+            // Show selected content and activate tab
+            document.getElementById(`content-${status}`).classList.remove('hidden');
+            const activeTab = document.getElementById(`tab-${status}`);
+            activeTab.classList.remove('text-gray-500', 'border-transparent');
+            activeTab.classList.add('text-primary-dark', 'border-primary-dark');
+
+            // Load data if needed or if force reload is requested
+            const container = document.getElementById(`${status}-submissions-container`);
+            if (forceReload || !container.hasAttribute('data-loaded')) {
+                container.removeAttribute('data-loaded');
+                loadSubmissions(status);
+            }
+        }
+
+        // Format date to "Dec 15, 2024" format
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        // Initialize with Pending tab selected
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait for Supabase client to be initialized
+            // Check if it's already available (script might have loaded already)
+            if (window.supabaseClient) {
+                console.log('Supabase client already initialized');
+                switchTab('pending');
+            } else {
+                console.log('Waiting for Supabase client to initialize...');
+                // Check every 100ms for up to 5 seconds
+                let attempts = 0;
+                const maxAttempts = 50;
+                const checkInterval = setInterval(() => {
+                    if (window.supabaseClient) {
+                        clearInterval(checkInterval);
+                        console.log('Supabase client initialized, loading data...');
+            switchTab('pending');
+                    } else if (++attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        console.error('Timed out waiting for Supabase client');
+                        document.getElementById('pending-submissions-container').innerHTML = `
+                            <div class="text-center py-8">
+                                <p class="text-red-500">Error: Could not initialize Supabase client. Please refresh the page.</p>
+                            </div>
+                        `;
+                    }
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Submission - Vrai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#89CFF0',
+                        'primary-dark': '#7ab8d9',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Playfair Display', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-init.js"></script>
+    <script src="supabase-upload.js"></script>
+    <script src="supabase-submission.js"></script>
+    
+    <!-- Ensure Supabase is initialized -->
+    <script>
+        // Global variable to store submission ID
+        window.currentSubmissionId = null;
+        
+        /**
+         * Get submission ID from multiple sources with fallback logic
+         * @returns {Promise<string|null>} - The submission ID or null if not found
+         */
+        async function getSubmissionIdFromMultipleSources() {
+            console.log('[SUBMISSION-ID] Attempting to retrieve submission ID from multiple sources...');
+            
+            // 1. Try URL parameters first
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlSubmissionId = urlParams.get('submission_id');
+            console.log('[SUBMISSION-ID] URL parameters check:', { urlSubmissionId, fullUrl: window.location.href });
+            if (urlSubmissionId) {
+                console.log('[SUBMISSION-ID] Found submission ID in URL parameters:', urlSubmissionId);
+                window.currentSubmissionId = urlSubmissionId;
+                return urlSubmissionId;
+            }
+            
+            // 2. Try session storage
+            const sessionSubmissionId = sessionStorage.getItem('currentSubmissionId');
+            console.log('[SUBMISSION-ID] Session storage check:', { sessionSubmissionId, allKeys: Object.keys(sessionStorage) });
+            if (sessionSubmissionId) {
+                console.log('[SUBMISSION-ID] Found submission ID in session storage:', sessionSubmissionId);
+                window.currentSubmissionId = sessionSubmissionId;
+                return sessionSubmissionId;
+            }
+            
+            // 3. Try to get from current user's active submission
+            try {
+                console.log('[SUBMISSION-ID] Attempting database retrieval...');
+                const userId = await getCurrentUserId();
+                console.log('[SUBMISSION-ID] Current user ID:', userId);
+                if (userId) {
+                    console.log('[SUBMISSION-ID] Getting submission ID for user:', userId);
+                    const submissionId = await getOrCreateSubmission(userId);
+                    console.log('[SUBMISSION-ID] Retrieved submission ID from database:', submissionId);
+                    window.currentSubmissionId = submissionId;
+                    
+                    // Store in session storage for future use
+                    sessionStorage.setItem('currentSubmissionId', submissionId);
+                    console.log('[SUBMISSION-ID] Stored submission ID in session storage');
+                    
+                    return submissionId;
+                } else {
+                    console.log('[SUBMISSION-ID] No user ID available');
+                }
+            } catch (error) {
+                console.error('[SUBMISSION-ID] Error getting submission ID from database:', error);
+            }
+            
+            console.error('[SUBMISSION-ID] No submission ID found from any source');
+            return null;
+        }
+        
+        /**
+         * Initialize the confirmation page with submission ID
+         */
+        async function initializeConfirmationPage() {
+            console.log('[INIT] Initializing confirmation page...');
+            
+            try {
+                // Get submission ID
+                const submissionId = await getSubmissionIdFromMultipleSources();
+                console.log('[INIT] Final submission ID:', submissionId);
+                
+                if (!submissionId) {
+                    console.error('[INIT] No submission ID available - cannot proceed');
+                    showError('No submission found. Please start the authentication process from step 1.');
+                    return;
+                }
+                
+                // Set submission ID in photo uploader
+                if (window.photoUploader && typeof window.photoUploader.setSubmissionId === 'function') {
+                    window.photoUploader.setSubmissionId(submissionId);
+                    console.log('[INIT] Set submission ID in photo uploader:', submissionId);
+                } else {
+                    console.error('[INIT] Photo uploader not available or missing setSubmissionId function');
+                }
+                
+                // Load photos for this submission
+                await loadPhotosFromSupabase();
+                
+                // Update the UI
+                updatePhotoGrid();
+                
+                // Set up event listeners
+                setupEventListeners();
+                
+                console.log('[INIT] Confirmation page initialized successfully');
+                
+            } catch (error) {
+                console.error('[INIT] Error initializing confirmation page:', error);
+                showError('Failed to initialize page. Please refresh and try again.');
+            }
+        }
+        
+        /**
+         * Show error message to user
+         */
+        function showError(message) {
+            const uploadStatus = document.getElementById('uploadStatus');
+            if (uploadStatus) {
+                uploadStatus.textContent = `Error: ${message}`;
+                uploadStatus.className = 'text-red-600 font-medium';
+            }
+            
+            // Disable submit button
+            const submitButton = document.getElementById('submitButton');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Cannot Submit - Error';
+            }
+        }
+        
+        /**
+         * Set up event listeners for the page
+         */
+        function setupEventListeners() {
+            // Model input validation
+            const modelInput = document.getElementById('modelInput');
+            if (modelInput) {
+                modelInput.addEventListener('input', validateForm);
+                modelInput.addEventListener('change', validateForm);
+                console.log('[EVENTS] Added model input event listeners');
+            }
+            
+            // Photo modal event listeners
+            const photoModal = document.getElementById('photoModal');
+            if (photoModal) {
+                photoModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closePhotoModal();
+                    }
+                });
+            }
+            
+            // Success modal event listeners
+            const successModal = document.getElementById('successModal');
+            if (successModal) {
+                successModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeSuccessModal();
+                    }
+                });
+            }
+            
+            // Step 10 navigation buttons
+            const prevStep10Photo = document.getElementById('prevStep10Photo');
+            const nextStep10Photo = document.getElementById('nextStep10Photo');
+            
+            if (prevStep10Photo) {
+                prevStep10Photo.addEventListener('click', () => navigateStep10Photos('prev'));
+            }
+            if (nextStep10Photo) {
+                nextStep10Photo.addEventListener('click', () => navigateStep10Photos('next'));
+            }
+        }
+        
+        // Initialize page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[DOM] DOM loaded, starting initialization...');
+            console.log('[DOM] Current URL:', window.location.href);
+            console.log('[DOM] Session storage keys:', Object.keys(sessionStorage));
+            initializeConfirmationPage();
+        });
+        
+        // Global variables for step 10 photo navigation
+        let currentStep10Index = 0;
+        
+        // Function to open photo modal
+        function openPhotoModal(stepNumber) {
+            console.log(`[MODAL] Opening photo modal for step ${stepNumber}`);
+            
+            const modal = document.getElementById('photoModal');
+            const modalPhotoImage = document.getElementById('modalPhotoImage');
+            const step10Navigation = document.getElementById('step10Navigation');
+            
+            // Get the current photoUrls from the photoUploader module
+            let photoUrls;
+            if (window.photoUploader && typeof window.photoUploader.getPhotoUrls === 'function') {
+                photoUrls = window.photoUploader.getPhotoUrls();
+                console.log('[MODAL] Got photoUrls from photoUploader:', JSON.parse(JSON.stringify(photoUrls)));
+            } else {
+                console.error('[MODAL] photoUploader or getPhotoUrls not available');
+                return;
+            }
+            
+            if (stepNumber === 10) {
+                // Step 10 has multiple photos
+                const step10Photos = photoUrls[9];
+                
+                if (step10Photos && step10Photos.length > 0) {
+                    currentStep10Index = 0;
+                    modalPhotoImage.src = step10Photos[0];
+                    updateStep10Counter();
+                    step10Navigation.classList.remove('hidden');
+                } else {
+                    // No photos for step 10
+                    modalPhotoImage.src = '';
+                    modalPhotoImage.alt = 'No photo available';
+                    step10Navigation.classList.add('hidden');
+                }
+            } else {
+                // Steps 1-9 have single photos
+                const photoUrl = photoUrls[stepNumber - 1];
+                
+                if (photoUrl) {
+                    modalPhotoImage.src = photoUrl;
+                } else {
+                    modalPhotoImage.src = '';
+                    modalPhotoImage.alt = 'No photo available';
+                }
+                
+                // Hide step 10 navigation for other steps
+                step10Navigation.classList.add('hidden');
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closePhotoModal() {
+            const modal = document.getElementById('photoModal');
+            modal.classList.add('hidden');
+        }
+
+        // Navigate through step 10 photos
+        function navigateStep10Photos(direction) {
+            // Get the current photoUrls from the photoUploader module
+            const photoUrls = window.photoUploader.getPhotoUrls();
+            const step10Photos = photoUrls[9];
+            
+            if (!step10Photos || step10Photos.length <= 1) return;
+            
+            if (direction === 'next') {
+                currentStep10Index = (currentStep10Index + 1) % step10Photos.length;
+            } else {
+                currentStep10Index = (currentStep10Index - 1 + step10Photos.length) % step10Photos.length;
+            }
+            
+            document.getElementById('modalPhotoImage').src = step10Photos[currentStep10Index];
+            updateStep10Counter();
+        }
+        
+        function updateStep10Counter() {
+            // Get the current photoUrls from the photoUploader module
+            const photoUrls = window.photoUploader.getPhotoUrls();
+            const step10Photos = photoUrls[9];
+            
+            if (!step10Photos || step10Photos.length <= 1) return;
+            
+            document.getElementById('step10Counter').textContent = 
+                `${currentStep10Index + 1} / ${step10Photos.length}`;
+        }
+
+        async function submitAuthentication() {
+            const modelInput = document.getElementById('modelInput');
+            const model = modelInput.value.trim();
+            
+            if (!model) {
+                alert('Please enter the model name before submitting.');
+                return;
+            }
+            
+            if (!window.currentSubmissionId) {
+                alert('No submission ID found. Please refresh the page and try again.');
+                return;
+            }
+
+            // Show loading state
+            const submitButton = document.getElementById('submitButton');
+            submitButton.textContent = 'Submitting...';
+            submitButton.disabled = true;
+            
+            try {
+                console.log('[SUBMIT] Starting submission process...');
+                console.log('[SUBMIT] Submission ID:', window.currentSubmissionId);
+                console.log('[SUBMIT] Model name:', model);
+                
+                // Get photo URLs from photoUploader
+                let photoUrls = [];
+                if (window.photoUploader && typeof window.photoUploader.getPhotoUrls === 'function') {
+                    photoUrls = window.photoUploader.getPhotoUrls();
+                    console.log('[SUBMIT] Photo URLs:', photoUrls);
+                } else {
+                    throw new Error('Photo uploader not available');
+                }
+                
+                // Finalize the submission
+                const result = await finalizeSubmission(window.currentSubmissionId, model, photoUrls);
+                console.log('[SUBMIT] Submission finalized:', result);
+                
+                // Clear session storage to start fresh for next submission
+                sessionStorage.removeItem('currentSubmissionId');
+                console.log('[SUBMIT] Cleared submission ID from session storage');
+                
+                // Show success modal
+                showSuccessModal();
+                
+            } catch (error) {
+                console.error('[SUBMIT] Error during submission:', error);
+                alert('Failed to submit authentication request. Please try again.');
+                
+                // Reset button state
+                submitButton.textContent = 'Submit for Authentication';
+                submitButton.disabled = false;
+            }
+        }
+
+        function showSuccessModal() {
+            document.getElementById('successModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            
+            // Start countdown timer
+            let countdown = 5;
+            const countdownElement = document.querySelector('#successModal .text-xs');
+            
+            const countdownTimer = setInterval(() => {
+                countdown--;
+                if (countdownElement) {
+                    countdownElement.textContent = `You will be redirected to the dashboard in ${countdown} seconds...`;
+                }
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownTimer);
+                    console.log('[AUTO-REDIRECT] Auto-redirecting to admin dashboard...');
+                    window.location.href = 'dashboard-admin.html';
+                }
+            }, 1000);
+            
+            // Store timer reference so we can clear it if user clicks manually
+            window.successModalTimer = countdownTimer;
+        }
+
+        function closeSuccessModal() {
+            // Clear the auto-redirect timer if it exists
+            if (window.successModalTimer) {
+                clearInterval(window.successModalTimer);
+                window.successModalTimer = null;
+            }
+            
+            document.getElementById('successModal').classList.add('hidden');
+            document.body.style.overflow = ''; // Restore scrolling
+            
+            // Redirect to admin dashboard after closing
+            setTimeout(() => {
+                console.log('[REDIRECT] Redirecting to admin dashboard...');
+                window.location.href = 'dashboard-admin.html';
+            }, 500); // Increased delay to ensure modal closes properly
+        }
+        
+        // Function to load photos directly from Supabase if needed
+        async function loadPhotosFromSupabase() {
+            try {
+                console.log('[PHOTO-LOAD] Starting photo loading process...');
+                
+                // Check if supabase client is initialized
+                if (!window.supabaseClient) {
+                    console.error('[PHOTO-LOAD] Supabase client not initialized');
+                    
+                    // Try to initialize it manually
+                    tryInitializeSupabaseClient();
+                    
+                    // Wait a bit and check again
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    if (!window.supabaseClient) {
+                        console.error('[PHOTO-LOAD] Still no Supabase client after initialization attempt');
+                        return;
+                    }
+                }
+                
+                // Wait for photoUploader to be available
+                if (!window.photoUploader) {
+                    console.log('[PHOTO-LOAD] Waiting for photoUploader to be available...');
+                    let attempts = 0;
+                    const maxAttempts = 50; // 5 seconds max wait
+                    
+                    while (!window.photoUploader && attempts < maxAttempts) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        attempts++;
+                    }
+                    
+                    if (!window.photoUploader) {
+                        console.error('[PHOTO-LOAD] PhotoUploader not available after waiting');
+                        return;
+                    }
+                    
+                    console.log('[PHOTO-LOAD] PhotoUploader is now available');
+                }
+                
+                console.log('[PHOTO-LOAD] Loading photos for current submission');
+                const stepPhotos = await findSubmissionPhotos();
+                
+                // Reset photoUrls in the photoUploader module
+                window.photoUploader.resetPhotoState();
+                
+                // Get access to the photoUrls array
+                const photoUrls = window.photoUploader.getPhotoUrls();
+                console.log('[PHOTO-LOAD] Initial photoUrls state:', JSON.parse(JSON.stringify(photoUrls)));
+                
+                // Process each step
+                let photoCount = 0;
+                
+                // Process steps 1-9
+                for (let stepNum = 1; stepNum <= 9; stepNum++) {
+                    const url = stepPhotos[stepNum];
+                    if (url) {
+                        try {
+                            console.log(`[PHOTO-LOAD] Processing step ${stepNum} URL: ${url}`);
+                            
+                            // Use uploadPhoto with null file and directUrl
+                            await window.photoUploader.uploadPhoto(null, stepNum, url);
+                            photoCount++;
+                            
+                            // Verify the URL was stored correctly
+                            const currentUrls = window.photoUploader.getPhotoUrls();
+                            console.log(`[PHOTO-LOAD] Verified photoUrls[${stepNum - 1}] = ${currentUrls[stepNum - 1]}`);
+                        } catch (error) {
+                            console.error(`[PHOTO-LOAD] Error processing step ${stepNum}:`, error);
+                        }
+                    }
+                }
+                
+                // Process step 10 (array of URLs)
+                if (stepPhotos[10] && stepPhotos[10].length > 0) {
+                    try {
+                        console.log(`[PHOTO-LOAD] Processing ${stepPhotos[10].length} URLs for step 10`);
+                        
+                        for (const url of stepPhotos[10]) {
+                            await window.photoUploader.uploadPhoto(null, 10, url);
+                        }
+                        
+                        photoCount++;
+                        
+                        // Verify the URLs were stored correctly
+                        const currentUrls = window.photoUploader.getPhotoUrls();
+                        console.log(`[PHOTO-LOAD] Step 10 array now has ${currentUrls[9].length} photos`);
+                    } catch (error) {
+                        console.error('[PHOTO-LOAD] Error processing step 10:', error);
+                    }
+                }
+                
+                // Get the final state of photoUrls
+                const updatedPhotoUrls = window.photoUploader.getPhotoUrls();
+                console.log('[PHOTO-LOAD] Final photoUrls state:', JSON.parse(JSON.stringify(updatedPhotoUrls)));
+                console.log(`[PHOTO-LOAD] Total photos loaded: ${photoCount}/10`);
+                
+            } catch (error) {
+                console.error('[PHOTO-LOAD] Error loading photos from Supabase:', error);
+                throw error;
+            }
+        }
+        
+        // Update the photo grid with loaded images
+        function updatePhotoGrid() {
+            console.log('[UI] Updating photo grid');
+            
+            const photoGrid = document.getElementById('photoGrid');
+            if (!photoGrid) {
+                console.error('[UI] Photo grid element not found');
+                return;
+            }
+            
+            photoGrid.innerHTML = ''; // Clear existing content
+            
+            // Get the current photoUrls from the photoUploader module
+            let photoUrls;
+            if (window.photoUploader && typeof window.photoUploader.getPhotoUrls === 'function') {
+                photoUrls = window.photoUploader.getPhotoUrls();
+                console.log('[UI] Got photoUrls from photoUploader:', JSON.parse(JSON.stringify(photoUrls)));
+            } else {
+                console.error('[UI] photoUploader or getPhotoUrls not available');
+                // Create an empty array
+                photoUrls = Array(10).fill(null);
+                photoUrls[9] = [];
+            }
+            
+            // Count available photos
+            let availablePhotos = 0;
+            
+            // Add photos for steps 1-9
+            for (let i = 0; i < 9; i++) {
+                const photoUrl = photoUrls[i];
+                const stepNumber = i + 1;
+                
+                const photoDiv = document.createElement('div');
+                photoDiv.className = 'aspect-square rounded-lg flex items-center justify-center cursor-pointer';
+                photoDiv.onclick = () => openPhotoModal(stepNumber);
+                
+                if (photoUrl) {
+                    // Photo exists
+                    availablePhotos++;
+                    console.log(`[UI] Adding photo for step ${stepNumber}: ${photoUrl}`);
+                    
+                    photoDiv.style.backgroundImage = `url(${photoUrl})`;
+                    photoDiv.style.backgroundSize = 'cover';
+                    photoDiv.style.backgroundPosition = 'center';
+                    
+                    // Add step number badge
+                    const badge = document.createElement('div');
+                    badge.className = 'bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full absolute bottom-1 right-1';
+                    badge.textContent = stepNumber;
+                    photoDiv.appendChild(badge);
+                    photoDiv.style.position = 'relative';
+                } else {
+                    // No photo
+                    photoDiv.className += ' bg-gray-200';
+                    
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'text-center';
+                    placeholder.innerHTML = `
+                            <svg class="w-6 h-6 text-gray-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        <span class="text-xs text-gray-500">${stepNumber}</span>
+                    `;
+                    photoDiv.appendChild(placeholder);
+                }
+                
+                photoGrid.appendChild(photoDiv);
+            }
+            
+            // Add step 10 (which can have multiple photos)
+            const step10Photos = photoUrls[9];
+            const step10Div = document.createElement('div');
+            step10Div.className = 'aspect-square rounded-lg flex items-center justify-center cursor-pointer';
+            step10Div.onclick = () => openPhotoModal(10);
+            
+            if (step10Photos && step10Photos.length > 0) {
+                // At least one photo exists for step 10
+                availablePhotos++;
+                console.log(`[UI] Adding ${step10Photos.length} photos for step 10`);
+                
+                step10Div.style.backgroundImage = `url(${step10Photos[0]})`;
+                step10Div.style.backgroundSize = 'cover';
+                step10Div.style.backgroundPosition = 'center';
+                step10Div.style.position = 'relative';
+                
+                // Add step number badge with count
+                const badge = document.createElement('div');
+                badge.className = 'bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full absolute bottom-1 right-1';
+                badge.textContent = `10 (${step10Photos.length})`;
+                step10Div.appendChild(badge);
+            } else {
+                // No photos for step 10
+                step10Div.className += ' bg-gray-200';
+                
+                const placeholder = document.createElement('div');
+                placeholder.className = 'text-center';
+                placeholder.innerHTML = `
+                    <svg class="w-6 h-6 text-gray-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span class="text-xs text-gray-500">10</span>
+                `;
+                step10Div.appendChild(placeholder);
+            }
+            
+            photoGrid.appendChild(step10Div);
+            
+            // Update status text
+            const uploadStatus = document.getElementById('uploadStatus');
+            if (uploadStatus) {
+                uploadStatus.textContent = `Uploaded Photos (${availablePhotos}/10)`;
+                console.log(`[UI] Updated status: ${availablePhotos}/10 photos`);
+            } else {
+                console.error('[UI] Upload status element not found');
+            }
+            
+            // Re-validate form after photo grid update
+            validateForm();
+            
+            // Debug: Test validation after a short delay
+            setTimeout(() => {
+                console.log('[DEBUG] Testing validation after photo grid update...');
+                validateForm();
+            }, 1000);
+        }
+
+        function validateForm() {
+            console.log('[VALIDATION] Starting form validation...');
+            
+            // Get the current photoUrls from the photoUploader module
+            let photoUrls = [];
+            if (window.photoUploader && typeof window.photoUploader.getPhotoUrls === 'function') {
+                photoUrls = window.photoUploader.getPhotoUrls();
+                console.log('[VALIDATION] Photo URLs from photoUploader:', JSON.parse(JSON.stringify(photoUrls)));
+            } else {
+                console.error('[VALIDATION] photoUploader or getPhotoUrls not available');
+                photoUrls = Array(10).fill(null);
+                photoUrls[9] = [];
+            }
+            
+            // Count photos (steps 1-9 must have photos, step 10 is optional)
+            let photoCount = 0;
+            for (let i = 0; i < 9; i++) {
+                if (photoUrls[i]) {
+                    photoCount++;
+                }
+            }
+            
+            console.log(`[VALIDATION] Photo count: ${photoCount} Has enough photos: ${photoCount >= 9}`);
+            
+            // Check model input
+            const modelInput = document.getElementById('modelInput');
+            const hasModel = modelInput && modelInput.value.trim().length > 0;
+            console.log(`[VALIDATION] Model input: Has model: ${hasModel}`);
+            
+            // Check submit button
+            const submitButton = document.getElementById('submitButton');
+            if (submitButton) {
+                console.log(`[VALIDATION] Submit button exists: ${true}`);
+                console.log(`[VALIDATION] Submit button visible: ${window.getComputedStyle(submitButton).visibility !== 'hidden'}`);
+                console.log(`[VALIDATION] Submit button display: ${window.getComputedStyle(submitButton).display}`);
+                
+                // Determine if form is valid
+                const isValid = photoCount >= 9 && hasModel;
+                
+                if (isValid) {
+                    console.log('[VALIDATION] Form is valid - enabling submit button');
+                    submitButton.disabled = false;
+                    submitButton.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                    submitButton.classList.add('bg-[#89CFF0]', 'text-white', 'cursor-pointer');
+                } else {
+                    console.log('[VALIDATION] Form is invalid - disabling submit button');
+                    submitButton.disabled = true;
+                    submitButton.classList.remove('bg-[#89CFF0]', 'text-white', 'cursor-pointer');
+                    submitButton.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                    console.log('[VALIDATION] Button disabled - classes applied');
+                }
+            } else {
+                console.error('[VALIDATION] Submit button not found');
+            }
+        }
+        
+        // This script ensures that the Supabase client is properly initialized
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[INIT] Checking Supabase initialization...');
+            
+            // Wait for a short time to ensure scripts are loaded
+            setTimeout(() => {
+                // Check if supabaseClient is available
+                if (!window.supabaseClient) {
+                    console.warn('[INIT] supabaseClient not found, attempting to initialize manually');
+                    
+                    try {
+                        // Check if the Supabase library is available
+                        if (typeof supabase !== 'undefined') {
+                            console.log('[INIT] Supabase library found, creating client');
+                            
+                            // Create the client
+                            window.supabaseClient = supabase.createClient(
+                                'https://gyxakkxotjkdsjvbufiv.supabase.co',
+                                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5eGFra3hvdGprZHNqdmJ1Zml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMjc1MTMsImV4cCI6MjA2NzcwMzUxM30.RT0VJKgdYSUJXzA34diTOpCvenMT6qjMfHaLmCAvEpk'
+                            );
+                            
+                            console.log('[INIT] Supabase client created manually');
+                        } else {
+                            console.error('[INIT] Supabase library not available');
+                        }
+                    } catch (error) {
+                        console.error('[INIT] Error initializing Supabase client:', error);
+                    }
+                } else {
+                    console.log('[INIT] supabaseClient already initialized');
+                }
+            }, 500);
+        });
+        
+                 // Function to try to initialize Supabase client
+         function tryInitializeSupabaseClient() {
+             console.log('[SUPABASE] Attempting to initialize Supabase client...');
+             
+             try {
+                 if (typeof supabase !== 'undefined') {
+                     window.supabaseClient = supabase.createClient(
+                         'https://gyxakkxotjkdsjvbufiv.supabase.co',
+                         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5eGFra3hvdGprZHNqdmJ1Zml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMjc1MTMsImV4cCI6MjA2NzcwMzUxM30.RT0VJKgdYSUJXzA34diTOpCvenMT6qjMfHaLmCAvEpk'
+                     );
+                     console.log('[SUPABASE] Supabase client initialized successfully');
+                 } else {
+                     console.error('[SUPABASE] Supabase library not available');
+                 }
+             } catch (error) {
+                 console.error('[SUPABASE] Error initializing Supabase client:', error);
+             }
+         }
+         
+         /**
+          * Recursively list all files in a Supabase bucket
+          * @param {Object} supabase - Supabase client
+          * @param {string} bucketName - Name of the bucket to list
+          * @param {string} [prefix=''] - Path prefix to list
+          * @param {Array} [allFiles=[]] - Accumulator for all files
+          * @returns {Promise<Array>} - Array of all files with their paths and URLs
+          */
+         async function getAllBucketFiles(supabase, bucketName, prefix = '', allFiles = []) {
+             // Clean up the prefix to avoid double slashes
+             const cleanPrefix = prefix.replace(/^\/+/, '').replace(/\/+$/, '');
+             const displayPrefix = cleanPrefix ? `'${cleanPrefix}'` : 'root level';
+             
+             console.log(`[STORAGE] Listing files in '${bucketName}' at ${displayPrefix}`);
+             
+             try {
+                 // List files/folders at current prefix
+                 const { data: items, error } = await supabase.storage
+                     .from(bucketName)
+                     .list(cleanPrefix, {
+                         limit: 1000,
+                         offset: 0,
+                         sortBy: { column: 'name', order: 'asc' }
+                     });
+                 
+                 if (error) {
+                     console.error(`[STORAGE-ERROR] Error listing ${displayPrefix}:`, error);
+                     return allFiles;
+                 }
+                 
+                 if (!items || items.length === 0) {
+                     console.log(`[STORAGE] No items found at ${displayPrefix}`);
+                     return allFiles;
+                 }
+                 
+                 console.log(`[STORAGE] Found ${items.length} items at ${displayPrefix}`);
+                 
+                 // Process folders and files
+                 const folders = items.filter(item => item.id === null); // Folders have null id
+                 const files = items.filter(item => item.id !== null);   // Files have an id
+                 
+                 // Add files to our results with their public URLs
+                 for (const file of files) {
+                     // Create the correct file path based on prefix
+                     const filePath = cleanPrefix ? `${cleanPrefix}/${file.name}` : file.name;
+                     
+                     try {
+                         const { data: urlData } = supabase.storage
+                             .from(bucketName)
+                             .getPublicUrl(filePath);
+                             
+                         if (urlData && urlData.publicUrl) {
+                             allFiles.push({
+                                 name: file.name,
+                                 path: filePath,
+                                 url: urlData.publicUrl,
+                                 metadata: file
+                             });
+                             
+                             console.log(`[STORAGE] Added file: ${filePath}`);
+                         } else {
+                             console.warn(`[STORAGE] Failed to get public URL for ${filePath}`);
+                         }
+                     } catch (urlError) {
+                         console.error(`[STORAGE-ERROR] Error getting URL for ${filePath}:`, urlError);
+                     }
+                 }
+                 
+                 // Recursively process subfolders
+                 for (const folder of folders) {
+                     const folderPath = cleanPrefix ? `${cleanPrefix}/${folder.name}` : folder.name;
+                     console.log(`[STORAGE] Processing subfolder: ${folderPath}`);
+                     await getAllBucketFiles(supabase, bucketName, folderPath, allFiles);
+                 }
+                 
+                 return allFiles;
+             } catch (e) {
+                 console.error(`[STORAGE-ERROR] Exception listing ${displayPrefix}:`, e);
+                 return allFiles;
+             }
+         }
+         
+    </script>
+</head>
+<body class="min-h-screen bg-white font-sans text-[#1A1A1A] antialiased">
+    <div class="w-full max-w-md mx-auto min-h-screen bg-white">
+        <!-- Top App Bar -->
+        <div class="bg-white shadow-sm sticky top-0 z-10">
+            <div class="flex items-center justify-between px-6 py-4">
+                <button onclick="history.back()" class="p-2 -ml-2 rounded-full">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <h1 class="text-lg font-semibold text-gray-900">Confirm Submission</h1>
+                <div class="w-10"></div>
+            </div>
+        </div>
+
+        <!-- Content Container -->
+        <div class="px-6 py-6 space-y-8">
+            <!-- Header Text -->
+            <div class="text-center">
+                <h2 class="font-display text-2xl font-semibold text-gray-900 mb-2">Almost Done!</h2>
+                <p class="text-gray-600 text-sm">Review your photos and add the model details to complete your authentication request.</p>
+            </div>
+
+            <!-- Photo Thumbnails Section -->
+            <div class="bg-gray-50 rounded-2xl p-6">
+                <h3 class="text-base font-semibold text-gray-900 mb-4">
+                    <span id="uploadStatus">Loading photos...</span>
+                </h3>
+                <div id="photoGrid" class="grid grid-cols-5 gap-3">
+                    <!-- Photo thumbnails will be inserted here dynamically -->
+                </div>
+                <p class="text-xs text-gray-500 mt-3 text-center">Tap any photo to view full size</p>
+            </div>
+
+            <!-- Model Input Section -->
+            <div class="bg-white rounded-2xl border border-gray-200 p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label for="modelInput" class="block text-sm font-semibold text-gray-900 mb-3">
+                            Model <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="modelInput" 
+                            name="model"
+                            placeholder="e.g. Birkin 25, Kelly 28"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base"
+                            required
+                        >
+                        <p class="text-xs text-gray-500 mt-2">Please specify the exact model name and size</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Section -->
+            <div class="space-y-4">
+                <button 
+                    id="submitButton" 
+                    onclick="submitAuthentication()" 
+                    disabled
+                    class="w-full bg-gray-300 text-gray-500 font-semibold py-4 rounded-xl text-base transition-all duration-200 disabled:cursor-not-allowed"
+                    style="display: block !important; visibility: visible !important; opacity: 1 !important;"
+                >
+                    Submit for Authentication
+                </button>
+                
+                <p class="text-xs text-gray-500 text-center">
+                    Your submission will be reviewed by our authentication experts within 24-48 hours.
+                </p>
+            </div>
+        </div>
+
+        <!-- Bottom padding -->
+        <div class="h-8"></div>
+    </div>
+
+    <!-- Photo Modal -->
+    <div id="photoModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+        <div class="relative max-w-full max-h-full">
+            <button onclick="closePhotoModal()" class="absolute top-4 right-4 text-white z-10">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div id="modalPhotoContainer" class="bg-gray-200 rounded-lg w-full max-w-md flex items-center justify-center">
+                <img id="modalPhotoImage" class="rounded-lg max-h-[80vh] max-w-full" alt="Full size photo">
+            </div>
+            
+            <!-- Navigation for step 10 multiple photos -->
+            <div id="step10Navigation" class="hidden mt-4 flex justify-center space-x-2">
+                <button id="prevStep10Photo" class="bg-white bg-opacity-50 rounded-full p-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <div id="step10Counter" class="bg-white bg-opacity-50 rounded-full px-4 py-2 text-sm">
+                    1 / 3
+                </div>
+                <button id="nextStep10Photo" class="bg-white bg-opacity-50 rounded-full p-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-6">
+        <div class="bg-white w-full max-w-sm mx-auto shadow-2xl">
+            <div class="relative p-6">
+                <!-- Close X button -->
+                <button onclick="closeSuccessModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                
+                <!-- Success Icon -->
+                <div class="text-center mb-4">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    
+                    <!-- Success Message -->
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Success!</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Authentication request submitted successfully!</p>
+                    <p class="text-gray-500 text-xs mt-2">You will be redirected to the dashboard in 5 seconds...</p>
+                </div>
+                
+                <!-- Close Button -->
+                <button onclick="closeSuccessModal()" class="w-full bg-[#89CFF0] text-white font-medium py-3 px-4 text-base">
+                    Continue to Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Find step photos for the current submission
+         * @returns {Promise<Object>} - Object with step numbers as keys and file URLs as values
+         */
+        async function findSubmissionPhotos() {
+            console.log("[STORAGE] Finding step photos for current submission");
+            
+            try {
+                if (!window.supabaseClient) {
+                    console.error("[STORAGE] Supabase client not initialized!");
+                    return {};
+                }
+                
+                // Get current submission ID
+                if (!window.currentSubmissionId) {
+                    console.error("[STORAGE] No submission ID found!");
+                    return {};
+                }
+                
+                console.log(`[STORAGE] Loading photos for submission: ${window.currentSubmissionId}`);
+                
+                // Wait for photoUploader to be available
+                if (!window.photoUploader || typeof window.photoUploader.loadSubmissionPhotos !== 'function') {
+                    console.log("[STORAGE] Waiting for photoUploader to be available...");
+                    let attempts = 0;
+                    const maxAttempts = 50; // 5 seconds max wait
+                    
+                    while ((!window.photoUploader || typeof window.photoUploader.loadSubmissionPhotos !== 'function') && attempts < maxAttempts) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        attempts++;
+                    }
+                    
+                    if (!window.photoUploader || typeof window.photoUploader.loadSubmissionPhotos !== 'function') {
+                        console.error("[STORAGE] Photo uploader not available or missing loadSubmissionPhotos function after waiting");
+                        return {};
+                    }
+                    
+                    console.log("[STORAGE] PhotoUploader is now available");
+                }
+                
+                // Load photos for this specific submission
+                const photoUrls = await window.photoUploader.loadSubmissionPhotos(window.currentSubmissionId);
+                
+                // Convert to step photos object format
+                const stepPhotos = {};
+                for (let i = 1; i <= 9; i++) {
+                    stepPhotos[i] = photoUrls[i - 1];
+                }
+                stepPhotos[10] = photoUrls[9];
+                
+                console.log("[STORAGE] Organized step photos:", stepPhotos);
+                return stepPhotos;
+            } catch (error) {
+                console.error("[STORAGE] Error finding submission photos:", error);
+                return {};
+            }
+        }
+        
+        // Note: Removed duplicate DOMContentLoaded listener - initialization is handled by initializeConfirmationPage()
+        
+        // Note: Removed loadUserPhotos function - photo loading is handled by loadPhotosFromSupabase()
+        
+        // Function to load photos directly from Supabase if needed
+        async function loadPhotosFromSupabase() {
+            try {
+                // Check if supabase client is initialized
+                if (!window.supabaseClient) {
+                    console.error('[PHOTO-LOAD] Supabase client not initialized');
+                    
+                    // Try to initialize it manually
+                    tryInitializeSupabaseClient();
+                    
+                    // Wait a bit and check again
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    if (!window.supabaseClient) {
+                        console.error('[PHOTO-LOAD] Still no Supabase client after initialization attempt');
+                        return;
+                    }
+                }
+                
+                // Check if photoUploader is available
+                if (!window.photoUploader) {
+                    console.error('[PHOTO-LOAD] photoUploader not available');
+                    return;
+                }
+                
+                console.log('[PHOTO-LOAD] Using recursive file listing to find all photos');
+                
+                // Load photos for the current submission
+                console.log('[PHOTO-LOAD] Loading photos for current submission');
+                const stepPhotos = await findSubmissionPhotos();
+                
+                // Reset photoUrls in the photoUploader module
+                window.photoUploader.resetPhotoState();
+                
+                // Get access to the photoUrls array
+                const photoUrls = window.photoUploader.getPhotoUrls();
+                console.log('[PHOTO-LOAD] Initial photoUrls state:', JSON.parse(JSON.stringify(photoUrls)));
+                
+                // Process each step
+            let photoCount = 0;
+            
+                // Process steps 1-9
+                for (let stepNum = 1; stepNum <= 9; stepNum++) {
+                    const url = stepPhotos[stepNum];
+                    if (url) {
+                        try {
+                            console.log(`[PHOTO-LOAD] Processing step ${stepNum} URL: ${url}`);
+                            
+                            // Use uploadPhoto with null file and directUrl
+                            await window.photoUploader.uploadPhoto(null, stepNum, url);
+                    photoCount++;
+                            
+                            // Verify the URL was stored correctly
+                            const currentUrls = window.photoUploader.getPhotoUrls();
+                            console.log(`[PHOTO-LOAD] Verified photoUrls[${stepNum - 1}] = ${currentUrls[stepNum - 1]}`);
+                        } catch (error) {
+                            console.error(`[PHOTO-LOAD] Error processing step ${stepNum}:`, error);
+                        }
+                    }
+                }
+                
+                // Process step 10 (array of URLs)
+                if (stepPhotos[10] && stepPhotos[10].length > 0) {
+                    try {
+                        console.log(`[PHOTO-LOAD] Processing ${stepPhotos[10].length} URLs for step 10`);
+                        
+                        for (const url of stepPhotos[10]) {
+                            await window.photoUploader.uploadPhoto(null, 10, url);
+                        }
+                        
+                        photoCount++;
+                        
+                        // Verify the URLs were stored correctly
+                        const currentUrls = window.photoUploader.getPhotoUrls();
+                        console.log(`[PHOTO-LOAD] Step 10 array now has ${currentUrls[9].length} photos`);
+                    } catch (error) {
+                        console.error('[PHOTO-LOAD] Error processing step 10:', error);
+                    }
+                }
+                
+                // Get the final state of photoUrls
+                const updatedPhotoUrls = window.photoUploader.getPhotoUrls();
+                console.log('[PHOTO-LOAD] Final photoUrls state:', JSON.parse(JSON.stringify(updatedPhotoUrls)));
+                console.log(`[PHOTO-LOAD] Total photos loaded: ${photoCount}/10`);
+                
+            } catch (error) {
+                console.error('[PHOTO-LOAD] Error loading photos from Supabase:', error);
+                throw error;
+            }
+        }
+        
+        // Update the photo grid with loaded images
+        function updatePhotoGrid() {
+            console.log('[UI] Updating photo grid');
+            
+            const photoGrid = document.getElementById('photoGrid');
+            if (!photoGrid) {
+                console.error('[UI] Photo grid element not found');
+                return;
+            }
+            
+            photoGrid.innerHTML = ''; // Clear existing content
+            
+            // Get the current photoUrls from the photoUploader module
+            let photoUrls;
+            if (window.photoUploader && typeof window.photoUploader.getPhotoUrls === 'function') {
+                photoUrls = window.photoUploader.getPhotoUrls();
+                console.log('[UI] Got photoUrls from photoUploader:', JSON.parse(JSON.stringify(photoUrls)));
+                } else {
+                console.error('[UI] photoUploader or getPhotoUrls not available');
+                // Create an empty array
+                photoUrls = Array(10).fill(null);
+                photoUrls[9] = [];
+            }
+            
+            // Count available photos
+            let availablePhotos = 0;
+            
+            // Add photos for steps 1-9
+            for (let i = 0; i < 9; i++) {
+                const photoUrl = photoUrls[i];
+                const stepNumber = i + 1;
+                
+                const photoDiv = document.createElement('div');
+                photoDiv.className = 'aspect-square rounded-lg flex items-center justify-center cursor-pointer';
+                photoDiv.onclick = () => openPhotoModal(stepNumber);
+                
+                if (photoUrl) {
+                    // Photo exists
+                    availablePhotos++;
+                    console.log(`[UI] Adding photo for step ${stepNumber}: ${photoUrl}`);
+                    
+                    photoDiv.style.backgroundImage = `url(${photoUrl})`;
+                    photoDiv.style.backgroundSize = 'cover';
+                    photoDiv.style.backgroundPosition = 'center';
+                    
+                    // Add step number badge
+                    const badge = document.createElement('div');
+                    badge.className = 'bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full absolute bottom-1 right-1';
+                    badge.textContent = stepNumber;
+                    photoDiv.appendChild(badge);
+                    photoDiv.style.position = 'relative';
+                } else {
+                    // No photo
+                    photoDiv.className += ' bg-gray-200';
+                    
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'text-center';
+                    placeholder.innerHTML = `
+                            <svg class="w-6 h-6 text-gray-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        <span class="text-xs text-gray-500">${stepNumber}</span>
+                    `;
+                    photoDiv.appendChild(placeholder);
+                }
+                
+                photoGrid.appendChild(photoDiv);
+            }
+            
+            // Add step 10 (which can have multiple photos)
+            const step10Photos = photoUrls[9];
+            const step10Div = document.createElement('div');
+            step10Div.className = 'aspect-square rounded-lg flex items-center justify-center cursor-pointer';
+            step10Div.onclick = () => openPhotoModal(10);
+            
+            if (step10Photos && step10Photos.length > 0) {
+                // At least one photo exists for step 10
+                availablePhotos++;
+                console.log(`[UI] Adding ${step10Photos.length} photos for step 10`);
+                
+                step10Div.style.backgroundImage = `url(${step10Photos[0]})`;
+                step10Div.style.backgroundSize = 'cover';
+                step10Div.style.backgroundPosition = 'center';
+                step10Div.style.position = 'relative';
+                
+                // Add step number badge with count
+                const badge = document.createElement('div');
+                badge.className = 'bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full absolute bottom-1 right-1';
+                badge.textContent = `10 (${step10Photos.length})`;
+                step10Div.appendChild(badge);
+            } else {
+                // No photos for step 10
+                step10Div.className += ' bg-gray-200';
+                
+                const placeholder = document.createElement('div');
+                placeholder.className = 'text-center';
+                placeholder.innerHTML = `
+                    <svg class="w-6 h-6 text-gray-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span class="text-xs text-gray-500">10</span>
+                `;
+                step10Div.appendChild(placeholder);
+            }
+            
+            photoGrid.appendChild(step10Div);
+            
+            // Update status text
+            const uploadStatus = document.getElementById('uploadStatus');
+            if (uploadStatus) {
+                uploadStatus.textContent = `Uploaded Photos (${availablePhotos}/10)`;
+                console.log(`[UI] Updated status: ${availablePhotos}/10 photos`);
+            } else {
+                console.error('[UI] Upload status element not found');
+            }
+            
+            // Re-validate form after photo grid update
+            validateForm();
+            
+            // Debug: Test validation after a short delay
+            setTimeout(() => {
+                console.log('[DEBUG] Testing validation after photo grid update...');
+                validateForm();
+            }, 1000);
+        }
+
+        function validateForm() {
+            const modelInput = document.getElementById('modelInput');
+            const submitButton = document.getElementById('submitButton');
+            
+            // Debug: Check if elements exist
+            if (!modelInput) {
+                console.error('[VALIDATION] Model input not found!');
+                return;
+            }
+            if (!submitButton) {
+                console.error('[VALIDATION] Submit button not found!');
+                return;
+            }
+            
+            // Check if model input has content (case-insensitive)
+            const modelValue = modelInput.value.trim();
+            const hasModel = modelValue.length > 0;
+            
+            // Check if we have enough photos (at least 10 photos total)
+            let photoCount = 0;
+            if (window.photoUploader && typeof window.photoUploader.getPhotoUrls === 'function') {
+                const photoUrls = window.photoUploader.getPhotoUrls();
+                
+                // Count photos from steps 1-9
+                for (let i = 0; i < 9; i++) {
+                    if (photoUrls[i]) {
+                        photoCount++;
+                    }
+                }
+                
+                // Count photos from step 10 (array)
+                if (photoUrls[9] && photoUrls[9].length > 0) {
+                    photoCount++;
+                }
+            }
+            
+            const hasEnoughPhotos = photoCount >= 10;
+            
+            console.log('[VALIDATION] Model input:', modelValue, 'Has model:', hasModel);
+            console.log('[VALIDATION] Photo count:', photoCount, 'Has enough photos:', hasEnoughPhotos);
+            console.log('[VALIDATION] Submit button exists:', !!submitButton);
+            console.log('[VALIDATION] Submit button visible:', submitButton.offsetParent !== null);
+            console.log('[VALIDATION] Submit button display:', window.getComputedStyle(submitButton).display);
+            
+            // Enable button only if both conditions are met
+            if (hasModel && hasEnoughPhotos) {
+                submitButton.disabled = false;
+                submitButton.className = 'w-full bg-[#89CFF0] text-white font-semibold py-4 rounded-xl text-base transition-all duration-200';
+                console.log('[VALIDATION] Button enabled - classes applied');
+            } else {
+                submitButton.disabled = true;
+                submitButton.className = 'w-full bg-gray-300 text-gray-500 font-semibold py-4 rounded-xl text-base transition-all duration-200 disabled:cursor-not-allowed';
+                console.log('[VALIDATION] Button disabled - classes applied');
+            }
+            
+            // Force button to be visible
+            submitButton.style.display = 'block';
+            submitButton.style.visibility = 'visible';
+            submitButton.style.opacity = '1';
+            console.log('[VALIDATION] Forced button visibility');
+        }
+
+        function openPhotoModal(stepNumber) {
+            const modal = document.getElementById('photoModal');
+            const modalPhotoImage = document.getElementById('modalPhotoImage');
+            const step10Navigation = document.getElementById('step10Navigation');
+            
+            // Get the current photoUrls from the photoUploader module
+            const photoUrls = window.photoUploader.getPhotoUrls();
+            
+            if (stepNumber === 10) {
+                // Step 10 can have multiple photos
+                const step10Photos = photoUrls[9];
+                
+                if (step10Photos && step10Photos.length > 0) {
+                    currentStep10Index = 0;
+                    modalPhotoImage.src = step10Photos[currentStep10Index];
+                    
+                    // Show navigation if there are multiple photos
+                    if (step10Photos.length > 1) {
+                        step10Navigation.classList.remove('hidden');
+                        updateStep10Counter();
+            } else {
+                        step10Navigation.classList.add('hidden');
+                    }
+                } else {
+                    // No photos for step 10
+                    modalPhotoImage.src = '';
+                    modalPhotoImage.alt = 'No photo available';
+                    step10Navigation.classList.add('hidden');
+                }
+            } else {
+                // Steps 1-9 have single photos
+                const photoUrl = photoUrls[stepNumber - 1];
+                
+                if (photoUrl) {
+                    modalPhotoImage.src = photoUrl;
+                } else {
+                    modalPhotoImage.src = '';
+                    modalPhotoImage.alt = 'No photo available';
+                }
+                
+                // Hide step 10 navigation for other steps
+                step10Navigation.classList.add('hidden');
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closePhotoModal() {
+            const modal = document.getElementById('photoModal');
+            modal.classList.add('hidden');
+        }
+
+        // Navigate through step 10 photos
+        function navigateStep10Photos(direction) {
+            // Get the current photoUrls from the photoUploader module
+            const photoUrls = window.photoUploader.getPhotoUrls();
+            const step10Photos = photoUrls[9];
+            
+            if (!step10Photos || step10Photos.length <= 1) return;
+            
+            if (direction === 'next') {
+                currentStep10Index = (currentStep10Index + 1) % step10Photos.length;
+            } else {
+                currentStep10Index = (currentStep10Index - 1 + step10Photos.length) % step10Photos.length;
+            }
+            
+            document.getElementById('modalPhotoImage').src = step10Photos[currentStep10Index];
+            updateStep10Counter();
+        }
+        
+        function updateStep10Counter() {
+            // Get the current photoUrls from the photoUploader module
+            const photoUrls = window.photoUploader.getPhotoUrls();
+            const step10Photos = photoUrls[9];
+            
+            if (!step10Photos || step10Photos.length <= 1) return;
+            
+            document.getElementById('step10Counter').textContent = 
+                `${currentStep10Index + 1} / ${step10Photos.length}`;
+        }
+
+        async function submitAuthentication() {
+            const modelInput = document.getElementById('modelInput');
+            const model = modelInput.value.trim();
+            
+            if (!model) {
+                alert('Please enter the model name before submitting.');
+                return;
+            }
+
+            // Show loading state
+            const submitButton = document.getElementById('submitButton');
+            submitButton.textContent = 'Submitting...';
+            submitButton.disabled = true;
+            
+            try {
+                console.log('[SUBMIT] Starting submission process...');
+                
+                // Get photo URLs from photoUploader
+                let photoUrls = [];
+                if (window.photoUploader && typeof window.photoUploader.getPhotoUrls === 'function') {
+                    photoUrls = window.photoUploader.getPhotoUrls();
+                    console.log('[SUBMIT] Photo URLs:', photoUrls);
+                } else {
+                    throw new Error('Photo uploader not available');
+                }
+                
+                // Get submission ID
+                let submissionId = null;
+                if (window.photoUploader && typeof window.photoUploader.getSubmissionId === 'function') {
+                    submissionId = window.photoUploader.getSubmissionId();
+                    console.log('[SUBMIT] Submission ID:', submissionId);
+                }
+                
+                if (!submissionId) {
+                    // If no submission ID, get or create one
+                    const userId = await getCurrentUserId();
+                    submissionId = await getOrCreateSubmission(userId);
+                    console.log('[SUBMIT] Created new submission ID:', submissionId);
+                }
+                
+                // Finalize the submission
+                const result = await finalizeSubmission(submissionId, model, photoUrls);
+                console.log('[SUBMIT] Submission finalized:', result);
+                
+                // Clear session storage to start fresh for next submission
+                sessionStorage.removeItem('currentSubmissionId');
+                console.log('[SUBMIT] Cleared submission ID from session storage');
+                
+                // Show success modal
+                showSuccessModal();
+                
+            } catch (error) {
+                console.error('[SUBMIT] Error during submission:', error);
+                alert('Failed to submit authentication request. Please try again.');
+                
+                // Reset button state
+                submitButton.textContent = 'Submit for Authentication';
+                submitButton.disabled = false;
+            }
+        }
+
+        function showSuccessModal() {
+            document.getElementById('successModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            
+            // Start countdown timer
+            let countdown = 5;
+            const countdownElement = document.querySelector('#successModal .text-xs');
+            
+            const countdownTimer = setInterval(() => {
+                countdown--;
+                if (countdownElement) {
+                    countdownElement.textContent = `You will be redirected to the dashboard in ${countdown} seconds...`;
+                }
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownTimer);
+                    console.log('[AUTO-REDIRECT] Auto-redirecting to admin dashboard...');
+                    window.location.href = 'dashboard-admin.html';
+                }
+            }, 1000);
+            
+            // Store timer reference so we can clear it if user clicks manually
+            window.successModalTimer = countdownTimer;
+        }
+
+        function closeSuccessModal() {
+            // Clear the auto-redirect timer if it exists
+            if (window.successModalTimer) {
+                clearInterval(window.successModalTimer);
+                window.successModalTimer = null;
+            }
+            
+            document.getElementById('successModal').classList.add('hidden');
+            document.body.style.overflow = ''; // Restore scrolling
+            
+            // Redirect to admin dashboard after closing
+            setTimeout(() => {
+                console.log('[REDIRECT] Redirecting to admin dashboard...');
+                window.location.href = 'dashboard-admin.html';
+            }, 500); // Increased delay to ensure modal closes properly
+        }
+        
+        // Set up event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Step 10 navigation buttons
+            document.getElementById('prevStep10Photo').addEventListener('click', () => navigateStep10Photos('prev'));
+            document.getElementById('nextStep10Photo').addEventListener('click', () => navigateStep10Photos('next'));
+
+            // Add event listener for model input changes
+            const modelInput = document.getElementById('modelInput');
+            if (modelInput) {
+                modelInput.addEventListener('input', validateForm);
+                modelInput.addEventListener('change', validateForm);
+                console.log('[EVENTS] Added model input event listeners');
+            }
+
+            // Debug: Add a test button to check button visibility
+            const submitButton = document.getElementById('submitButton');
+            if (submitButton) {
+                console.log('[DEBUG] Submit button found on load');
+                console.log('[DEBUG] Initial button display:', window.getComputedStyle(submitButton).display);
+                console.log('[DEBUG] Initial button visibility:', window.getComputedStyle(submitButton).visibility);
+                } else {
+                console.error('[DEBUG] Submit button not found on load!');
+        }
+
+        // Close modals when clicking outside
+        document.getElementById('photoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePhotoModal();
+            }
+        });
+
+        document.getElementById('successModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSuccessModal();
+            }
+        });
+        });
+    </script>
+</body>
+</html> 

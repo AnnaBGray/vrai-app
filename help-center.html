@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help Center - Vrai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#89CFF0',
+                        'primary-dark': '#7ab8d9',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Playfair Display', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .faq-answer {
+            max-height: none;
+            overflow: visible;
+        }
+        
+        /* Remove accordion-related styles since we're showing everything expanded */
+        .faq-icon {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-[#EAF6FC] font-sans text-[#1A1A1A] antialiased">
+    <div class="w-full max-w-md mx-auto pb-20">
+        <!-- Header -->
+        <div class="px-4 pt-8 pb-6">
+            <div class="flex items-center mb-2">
+                <button onclick="window.location.href='settings.html'" class="flex items-center justify-center w-10 h-10 rounded-lg mr-3">
+                    <svg class="w-6 h-6 text-gray-600" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h1 class="font-display text-2xl font-semibold text-gray-900">Help Center</h1>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="px-4 mb-6">
+            <div class="relative">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Search FAQs..." 
+                    class="w-full px-4 py-3 pl-10 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors text-gray-900"
+                >
+                <svg class="w-5 h-5 text-gray-400 absolute left-3 top-3.5" viewBox="0 0 24 24" fill="none">
+                    <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="currentColor"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="px-4">
+            <div class="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mb-2"></div>
+                <p class="text-gray-600">Loading FAQs...</p>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="px-4 hidden">
+            <div class="bg-white rounded-xl shadow-sm p-6 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No FAQs found</h3>
+                <p class="mt-1 text-sm text-gray-500">We couldn't find any FAQs matching your search.</p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="px-4 hidden">
+            <div class="bg-white rounded-xl shadow-sm p-6 text-center">
+                <svg class="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Error loading FAQs</h3>
+                <p class="mt-1 text-sm text-gray-500">Please try again later.</p>
+            </div>
+        </div>
+
+        <!-- FAQ Content -->
+        <div id="faqContent" class="px-4 space-y-6 hidden">
+            <!-- FAQ categories will be inserted here dynamically -->
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-gray-100 py-3 px-4 shadow-sm z-50">
+        <div class="flex justify-around items-center">
+            <!-- Dashboard -->
+            <a href="#" id="dashboard-link" class="flex flex-col items-center justify-center text-xs font-medium text-gray-400">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 13H11V3H3V13ZM3 21H11V15H3V21ZM13 21H21V11H13V21ZM13 3V9H21V3H13Z" fill="currentColor"/>
+                </svg>
+                <span class="mt-1">Dashboard</span>
+            </a>
+            <!-- Authenticate -->
+            <a href="#" class="flex flex-col items-center justify-center text-xs font-medium text-gray-400">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 15.2C13.7673 15.2 15.2 13.7673 15.2 12C15.2 10.2327 13.7673 8.8 12 8.8C10.2327 8.8 8.8 10.2327 8.8 12C8.8 13.7673 10.2327 15.2 12 15.2ZM12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17ZM12 4.5C12.8284 4.5 13.5 3.82843 13.5 3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3C10.5 3.82843 11.1716 4.5 12 4.5ZM19 4.5C19.8284 4.5 20.5 3.82843 20.5 3C20.5 2.17157 19.8284 1.5 19 1.5C18.1716 1.5 17.5 2.17157 17.5 3C17.5 3.82843 18.1716 4.5 19 4.5ZM21 19H3C2.45 19 2 18.55 2 18V6C2 5.45 2.45 5 3 5H7L9 3H15L17 5H21C21.55 5 22 5.45 22 6V18C22 18.55 21.55 19 21 19ZM20 17H4V7H20V17Z" fill="currentColor"/>
+                </svg>
+                <span class="mt-1">Authenticate</span>
+            </a>
+            <!-- Settings -->
+            <a href="settings.html" class="flex flex-col items-center justify-center text-xs font-medium text-[#89CFF0]">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <path d="M19.14 12.94C19.18 12.64 19.2 12.33 19.2 12C19.2 11.68 19.18 11.36 19.13 11.06L21.16 9.48C21.34 9.34 21.39 9.07 21.28 8.87L19.36 5.55C19.24 5.33 18.99 5.26 18.77 5.33L16.38 6.29C15.88 5.91 15.35 5.59 14.76 5.35L14.4 2.81C14.36 2.57 14.16 2.4 13.92 2.4H10.08C9.84 2.4 9.65 2.57 9.61 2.81L9.25 5.35C8.66 5.59 8.12 5.92 7.63 6.29L5.24 5.33C5.02 5.25 4.77 5.33 4.65 5.55L2.74 8.87C2.62 9.08 2.66 9.34 2.86 9.48L4.89 11.06C4.84 11.36 4.8 11.69 4.8 12C4.8 12.31 4.82 12.64 4.87 12.94L2.84 14.52C2.66 14.66 2.61 14.93 2.72 15.13L4.64 18.45C4.76 18.67 5.01 18.74 5.23 18.67L7.62 17.71C8.12 18.09 8.65 18.41 9.24 18.65L9.6 21.19C9.65 21.43 9.84 21.6 10.08 21.6H13.92C14.16 21.6 14.36 21.43 14.39 21.19L14.75 18.65C15.34 18.41 15.88 18.09 16.37 17.71L18.76 18.67C18.98 18.75 19.23 18.67 19.35 18.45L21.27 15.13C21.39 14.91 21.34 14.66 21.15 14.52L19.14 12.94ZM12 15.6C10.02 15.6 8.4 13.98 8.4 12C8.4 10.02 10.02 8.4 12 8.4C13.98 8.4 15.6 10.02 15.6 12C15.6 13.98 13.98 15.6 12 15.6Z" fill="currentColor"/>
+                </svg>
+                <span class="mt-1">Settings</span>
+            </a>
+            <!-- Admin (hidden by default, shown for admin users) -->
+            <a href="admin.html" id="admin-link" class="flex flex-col items-center justify-center text-xs font-medium text-gray-400 hidden">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 4L13.5 7H7V9H13.5L15 12L21 9ZM16 12C17.1 12 18 12.9 18 14S17.1 16 16 16 14 15.1 14 14 14.9 12 16 12ZM8 12C9.1 12 10 12.9 10 14S9.1 16 8 16 6 15.1 6 14 6.9 12 8 12ZM12 14C13.1 14 14 14.9 14 16S13.1 18 12 18 10 17.1 10 16 10.9 14 12 14ZM12 20C16.4 20 20 16.4 20 12S16.4 4 12 4 4 7.6 4 12 7.6 20 12 20Z" fill="currentColor"/>
+                </svg>
+                <span class="mt-1">Admin</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(
+            'https://gyxakkxotjkdsjvbufiv.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5eGFra3hvdGprZHNqdmJ1Zml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMjc1MTMsImV4cCI6MjA2NzcwMzUxM30.RT0VJKgdYSUJXzA34diTOpCvenMT6qjMfHaLmCAvEpk'
+        );
+
+        // DOM elements
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        const errorState = document.getElementById('errorState');
+        const faqContent = document.getElementById('faqContent');
+        const searchInput = document.getElementById('searchInput');
+
+        // Store all FAQs for filtering
+        let allFaqs = [];
+
+        /**
+         * Fetch FAQs from Supabase
+         */
+        async function fetchFaqs() {
+            try {
+                console.log('📚 Fetching FAQs from Supabase...');
+                
+                const { data: faqs, error } = await supabase
+                    .from('faqs')
+                    .select('*')
+                    .order('order', { ascending: true });
+                
+                if (error) {
+                    console.error('❌ Error fetching FAQs:', error);
+                    showErrorState();
+                    return;
+                }
+                
+                console.log('✅ Successfully fetched FAQs:', faqs);
+                
+                if (!faqs || faqs.length === 0) {
+                    showEmptyState();
+                    return;
+                }
+                
+                // Store all FAQs for filtering
+                allFaqs = faqs;
+                
+                // Display FAQs
+                displayFaqs(faqs);
+                
+            } catch (error) {
+                console.error('❌ Error in fetchFaqs:', error);
+                showErrorState();
+            }
+        }
+
+        /**
+         * Display FAQs grouped by category
+         * @param {Array} faqs - Array of FAQ objects
+         */
+        function displayFaqs(faqs) {
+            // Group FAQs by category
+            const faqsByCategory = groupByCategory(faqs);
+            
+            // Clear previous content
+            faqContent.innerHTML = '';
+            
+            // Create HTML for each category
+            Object.entries(faqsByCategory).forEach(([category, categoryFaqs]) => {
+                const categorySection = document.createElement('div');
+                categorySection.className = 'category-section';
+                
+                // Category heading
+                const categoryHeading = document.createElement('h2');
+                categoryHeading.className = 'font-display text-lg font-semibold text-gray-900 mb-3';
+                categoryHeading.textContent = category;
+                categorySection.appendChild(categoryHeading);
+                
+                // Category card
+                const categoryCard = document.createElement('div');
+                categoryCard.className = 'bg-white rounded-xl shadow-sm overflow-hidden';
+                
+                // Add FAQs to category card
+                categoryFaqs.forEach((faq, index) => {
+                    const faqItem = createFaqItem(faq, index < categoryFaqs.length - 1);
+                    categoryCard.appendChild(faqItem);
+                });
+                
+                categorySection.appendChild(categoryCard);
+                faqContent.appendChild(categorySection);
+            });
+            
+            // Show FAQ content
+            loadingState.classList.add('hidden');
+            faqContent.classList.remove('hidden');
+        }
+
+        /**
+         * Create a single FAQ item element
+         * @param {Object} faq - FAQ object
+         * @param {boolean} hasBorder - Whether to add a border at the bottom
+         * @returns {HTMLElement} - FAQ item element
+         */
+        function createFaqItem(faq, hasBorder) {
+            const faqItem = document.createElement('div');
+            faqItem.className = hasBorder ? 'border-b border-gray-100 p-4' : 'p-4';
+            
+            // FAQ question (always visible)
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'mb-2';
+            
+            questionDiv.innerHTML = `
+                <h3 class="font-medium text-gray-900">${faq.question}</h3>
+            `;
+            
+            // FAQ answer (always visible)
+            const answerDiv = document.createElement('div');
+            answerDiv.className = 'text-gray-600 text-sm';
+            answerDiv.innerHTML = faq.answer;
+            
+            // No click event needed since everything is always visible
+            
+            faqItem.appendChild(questionDiv);
+            faqItem.appendChild(answerDiv);
+            
+            return faqItem;
+        }
+
+        /**
+         * Group FAQs by category
+         * @param {Array} faqs - Array of FAQ objects
+         * @returns {Object} - Object with categories as keys and arrays of FAQs as values
+         */
+        function groupByCategory(faqs) {
+            return faqs.reduce((acc, faq) => {
+                const category = faq.category || 'General';
+                if (!acc[category]) {
+                    acc[category] = [];
+                }
+                acc[category].push(faq);
+                return acc;
+            }, {});
+        }
+
+        /**
+         * Filter FAQs based on search input
+         * @param {string} query - Search query
+         */
+        function filterFaqs(query) {
+            if (!query.trim()) {
+                displayFaqs(allFaqs);
+                return;
+            }
+            
+            const normalizedQuery = query.toLowerCase().trim();
+            
+            const filteredFaqs = allFaqs.filter(faq => 
+                faq.question.toLowerCase().includes(normalizedQuery) || 
+                faq.answer.toLowerCase().includes(normalizedQuery)
+            );
+            
+            if (filteredFaqs.length === 0) {
+                showEmptyState();
+            } else {
+                displayFaqs(filteredFaqs);
+            }
+        }
+
+        /**
+         * Show empty state
+         */
+        function showEmptyState() {
+            loadingState.classList.add('hidden');
+            faqContent.classList.add('hidden');
+            errorState.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+        }
+
+        /**
+         * Show error state
+         */
+        function showErrorState() {
+            loadingState.classList.add('hidden');
+            faqContent.classList.add('hidden');
+            emptyState.classList.add('hidden');
+            errorState.classList.remove('hidden');
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fetch FAQs
+            fetchFaqs();
+            
+            // Set up search functionality
+            searchInput.addEventListener('input', function() {
+                filterFaqs(this.value);
+            });
+            
+            // Set up admin-aware navigation
+            setupAdminAwareNavigation();
+        });
+
+        /**
+         * Set up navigation links based on admin status
+         */
+        function setupAdminAwareNavigation() {
+            const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+            const dashboardLink = document.getElementById('dashboard-link');
+            const adminLink = document.getElementById('admin-link');
+            
+            // Set dashboard link based on admin status
+            if (dashboardLink) {
+                dashboardLink.href = isAdmin ? 'dashboard-admin.html' : 'dashboard.html';
+            }
+            
+            // Show/hide admin link based on admin status
+            if (adminLink && isAdmin) {
+                adminLink.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html> 

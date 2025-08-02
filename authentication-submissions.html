@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Authentication Submissions - Vrai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#89CFF0',
+                        'primary-dark': '#7ab8d9',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Playfair Display', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-init.js"></script>
+    <!-- Shared Navigation and Authentication -->
+    <script src="shared-navigation.js"></script>
+    <script src="authentication-submissions.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen bg-[#EAF6FC] font-sans text-[#1A1A1A] antialiased">
+    <div class="w-full max-w-md mx-auto min-h-screen bg-[#EAF6FC]">
+        <!-- Header Section -->
+        <div class="px-4 pb-6">
+            <div class="flex items-center justify-between mb-4">
+                <button onclick="goBackToDashboard()" class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200">
+                    <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Back to Dashboard
+                </button>
+            </div>
+            <h1 class="font-display text-2xl font-semibold text-gray-900 mb-1">Your Authentication Submissions</h1>
+            <p class="text-gray-600 text-sm">View all your submitted authentication requests</p>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="px-4 mb-6">
+            <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-1">
+                <div class="flex" id="filter-tabs">
+                    <button onclick="filterSubmissions('all')" data-filter="all" class="flex-1 py-2.5 px-4 text-sm font-medium rounded-xl transition-all duration-200 text-gray-600">
+                        All
+                    </button>
+                    <button onclick="filterSubmissions('in-progress')" data-filter="in-progress" class="flex-1 py-2.5 px-4 text-sm font-medium rounded-xl transition-all duration-200 text-white bg-[#89CFF0]">
+                        In Progress
+                    </button>
+                    <button onclick="filterSubmissions('completed')" data-filter="completed" class="flex-1 py-2.5 px-4 text-sm font-medium rounded-xl transition-all duration-200 text-gray-600">
+                        Completed
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Container -->
+        <div class="px-4 py-4">
+        <!-- Loading State -->
+            <div id="loading-state" class="bg-white rounded-lg p-4 shadow-sm mb-6">
+            <div class="text-center">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#89CFF0]"></div>
+                <p class="text-gray-500 text-sm mt-3">Loading your submissions...</p>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+            <div id="empty-state" class="bg-white rounded-lg p-4 shadow-sm mb-6 hidden">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-gray-400" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">No submissions yet</h3>
+                <p class="text-gray-500 text-sm mb-4">You haven't submitted any authentication requests yet.</p>
+                <button onclick="window.location.href='authenticate-guide.html'" class="bg-[#89CFF0] text-white font-semibold px-6 py-2 rounded-lg text-sm hover:bg-[#7ab8d9] transition-colors duration-200">
+                    Start Your First Authentication
+                </button>
+            </div>
+        </div>
+
+        <!-- Submissions List -->
+            <div id="submissions-container" class="space-y-3 mb-6 hidden">
+            <!-- Dynamic submission items will be inserted here -->
+        </div>
+
+        <!-- Error State -->
+            <div id="error-state" class="bg-white rounded-lg p-4 shadow-sm mb-6 hidden">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 9V13M12 17H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Unable to load submissions</h3>
+                <p class="text-gray-500 text-sm mb-4">There was an error loading your authentication submissions.</p>
+                <button onclick="loadSubmissions()" class="bg-[#89CFF0] text-white font-semibold px-6 py-2 rounded-lg text-sm hover:bg-[#7ab8d9] transition-colors duration-200">
+                    Try Again
+                </button>
+            </div>
+            </div>
+        </div>
+
+        <!-- Bottom padding for navigation -->
+        <div class="h-20"></div>
+
+
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4 pointer-events-none">
+        <!-- Toast messages will be dynamically inserted here -->
+    </div>
+
+    <style>
+        .toast {
+            background-color: #374151;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            pointer-events: auto;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease-out;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background-color: #dc2626;
+        }
+
+        .toast.success {
+            background-color: #059669;
+        }
+
+        .toast.info {
+            background-color: #2563eb;
+        }
+
+        @media (max-width: 640px) {
+            .toast {
+                font-size: 13px;
+                padding: 10px 14px;
+            }
+        }
+    </style>
+
+    <script>
+        // Show toast notification
+        function showToast(message, type = 'info', duration = 4000) {
+            const toastContainer = document.getElementById('toast-container');
+            
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            // Add to container
+            toastContainer.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+            
+            // Auto-remove after duration
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, duration);
+        }
+
+        // Check authentication and redirect if necessary
+        function validateSession() {
+            const userEmail = sessionStorage.getItem('userEmail');
+            
+            if (!userEmail) {
+                console.log('No user session found, redirecting to login');
+                window.location.href = 'index.html';
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Navigate back to appropriate dashboard
+        function goBackToDashboard() {
+            const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+            const dashboardPage = isAdmin ? 'dashboard-admin.html' : 'dashboard.html';
+            window.location.href = dashboardPage;
+        }
+
+
+
+        // Global variable to store all submissions for filtering
+        let allSubmissions = [];
+        let currentFilter = 'in-progress'; // Default to show Action Required
+
+        // Filter submissions by category
+        function filterSubmissions(filter) {
+            currentFilter = filter;
+            
+            // Update tab styling
+            const tabs = document.querySelectorAll('#filter-tabs button');
+            tabs.forEach(tab => {
+                if (tab.dataset.filter === filter) {
+                    tab.className = 'flex-1 py-2.5 px-4 text-sm font-medium rounded-xl transition-all duration-200 text-white bg-[#89CFF0]';
+                } else {
+                    tab.className = 'flex-1 py-2.5 px-4 text-sm font-medium rounded-xl transition-all duration-200 text-gray-600';
+                }
+            });
+
+            // Filter and display submissions
+            const filteredSubmissions = getFilteredSubmissions(allSubmissions, filter);
+            displayFilteredSubmissions(filteredSubmissions);
+        }
+
+        // Get submissions filtered by category
+        function getFilteredSubmissions(submissions, filter) {
+            if (filter === 'all') {
+                return submissions;
+            }
+
+            return submissions.filter(submission => {
+                const status = submission.status;
+                
+                if (filter === 'in-progress') {
+                    // In Progress: Pending Review and Action Required
+                    return status === 'Pending Review' || 
+                           status === 'Action Required';
+                }
+                
+                if (filter === 'completed') {
+                    // Completed: Authenticated and Rejected
+                    return status === 'Authenticated' || 
+                           status === 'Rejected';
+                }
+                
+                return false;
+            });
+        }
+
+        // Load user submissions from Supabase
+        async function loadSubmissions() {
+            try {
+                console.log('[AUTH-SUBMISSIONS] Loading submissions from Supabase...');
+                
+                // Use the function from authentication-submissions.js
+                if (window.fetchAuthenticationRequests) {
+                    const requests = await window.fetchAuthenticationRequests();
+                    
+                    // Debug: Check if report_url is present in the raw data
+                    if (requests && requests.length > 0) {
+                        requests.forEach(request => {
+                            if (request.status === 'Authenticated') {
+                                console.log('Raw authenticated request:', request);
+                                console.log('Has report_url in raw data:', request.hasOwnProperty('report_url'));
+                                console.log('Raw report_url value:', request.report_url);
+                            }
+                        });
+                    }
+                    
+                    // Transform Supabase data to match expected format
+                    const submissions = requests.map(request => ({
+                        id: request.id,
+                        humanReadableId: request.human_readable_id,
+                        modelName: request.model_name,
+                        status: request.status,
+                        submittedAt: request.created_at,
+                        completedAt: request.updated_at, // Use updated_at as completed_at if available
+                        adminNotes: request.admin_notes,
+                        reportUrl: request.report_url // Include report_url for authenticated submissions
+                    }));
+                    
+                    console.log('[AUTH-SUBMISSIONS] Transformed submissions:', submissions);
+                    
+                    // Display submissions using existing logic
+                    displaySubmissions(submissions);
+                } else {
+                    throw new Error('Supabase functions not loaded');
+                }
+
+            } catch (error) {
+                console.error('[AUTH-SUBMISSIONS] Error loading submissions:', error);
+                showErrorState();
+            }
+        }
+
+        // Display submissions list
+        function displaySubmissions(submissions) {
+            // Store all submissions globally for filtering
+            allSubmissions = submissions.sort((a, b) => 
+                new Date(b.submittedAt) - new Date(a.submittedAt)
+            );
+
+            // Apply current filter
+            const filteredSubmissions = getFilteredSubmissions(allSubmissions, currentFilter);
+            displayFilteredSubmissions(filteredSubmissions);
+        }
+
+        // Display filtered submissions
+        function displayFilteredSubmissions(submissions) {
+            const loadingState = document.getElementById('loading-state');
+            const emptyState = document.getElementById('empty-state');
+            const submissionsContainer = document.getElementById('submissions-container');
+            const errorState = document.getElementById('error-state');
+
+            // Hide all states first
+            loadingState.classList.add('hidden');
+            emptyState.classList.add('hidden');
+            submissionsContainer.classList.add('hidden');
+            errorState.classList.add('hidden');
+
+            if (submissions.length === 0) {
+                // Show custom empty state based on filter
+                showEmptyStateForFilter(currentFilter);
+                return;
+            }
+
+            // Clear existing content
+            submissionsContainer.innerHTML = '';
+
+            // Create submission cards
+            submissions.forEach(submission => {
+                const submissionCard = createSubmissionCard(submission);
+                submissionsContainer.appendChild(submissionCard);
+            });
+
+            submissionsContainer.classList.remove('hidden');
+        }
+
+        // Show appropriate empty state based on current filter
+        function showEmptyStateForFilter(filter) {
+            const emptyState = document.getElementById('empty-state');
+            const emptyStateContent = emptyState.querySelector('div');
+            
+            let title, message, buttonText, showButton = true;
+            
+            switch (filter) {
+                case 'in-progress':
+                    title = 'No submissions in progress';
+                    message = 'You don\'t have any pending or action-required submissions at the moment.';
+                    buttonText = 'Start New Authentication';
+                    break;
+                case 'completed':
+                    title = 'No completed submissions';
+                    message = 'You don\'t have any completed authentication submissions yet.';
+                    showButton = false; // Don't show button for completed filter
+                    break;
+                default:
+                    title = 'No submissions yet';
+                    message = 'You haven\'t submitted any authentication requests yet.';
+                    buttonText = 'Start Your First Authentication';
+            }
+            
+            emptyStateContent.innerHTML = `
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-gray-400" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">${title}</h3>
+                <p class="text-gray-500 text-sm ${showButton ? 'mb-4' : ''}">${message}</p>
+                ${showButton ? `
+                    <button onclick="window.location.href='authenticate-guide.html'" class="bg-[#89CFF0] text-white font-semibold px-6 py-2 rounded-lg text-sm">
+                        ${buttonText}
+                    </button>
+                ` : ''}
+            `;
+            
+            emptyState.classList.remove('hidden');
+        }
+
+        // Create individual submission card
+        function createSubmissionCard(submission) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow';
+
+            // Use the status directly without calling getDisplayStatus
+            const statusBadge = getStatusBadge(submission.status || 'Unknown');
+            const formattedDate = formatDate(submission.submittedAt);
+            
+            // Display logic for submission ID
+            const displayId = submission.humanReadableId ? 
+                             `#${submission.humanReadableId}` : 
+                             (submission.id ? `#${submission.id.substring(0, 8)}` : '#Unknown');
+
+            // Check if this is an Action Required submission
+            const isActionRequired = submission.status === 'Action Required';
+            // Check if this is an Authenticated submission with report URL
+            const isAuthenticated = submission.status === 'Authenticated';
+            const hasReportUrl = submission.reportUrl && typeof submission.reportUrl === 'string' && 
+                               submission.reportUrl.trim() !== '' && 
+                               !submission.reportUrl.includes('example.com') && 
+                               !submission.reportUrl.includes('dummy.pdf');
+            
+            // Debug logging
+            if (isAuthenticated) {
+                console.log('Authenticated submission found:', submission.id);
+                console.log('Report URL:', submission.reportUrl);
+                console.log('Has valid report URL:', hasReportUrl);
+            }
+
+            let cardContent = `
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <p class="text-xs font-medium text-gray-500">${displayId}</p>
+                        <h3 class="text-sm font-semibold text-gray-900 mt-1">${submission.modelName || submission.model || submission.itemName || 'Unknown Model'}</h3>
+                        <p class="text-xs text-gray-500 mt-1">${formattedDate}</p>
+                    </div>
+                    <span class="${statusBadge.bgClass} ${statusBadge.textClass} text-xs font-medium px-2 py-1 rounded-full">
+                                ${statusBadge.text}
+                            </span>
+                        </div>
+            `;
+
+            // Add authentication report download section for Authenticated submissions
+            if (isAuthenticated) {
+                const fileName = submission.humanReadableId ? 
+                    `VR-${submission.humanReadableId}-Report.pdf` : 
+                    `Authentication-Report.pdf`;
+                
+                if (hasReportUrl) {
+                    // Show download button with valid report URL
+                    cardContent += `
+                        <div class="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                        </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-green-900">Authentication Report</p>
+                                        <p class="text-xs text-green-700">${fileName}</p>
+                                    </div>
+                                </div>
+                                <button onclick="openReportUrl('${submission.reportUrl}', '${submission.id}')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    Download
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Show check database button when no report URL is available
+                    cardContent += `
+                        <div class="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-green-900">Authentication Report</p>
+                                        <p class="text-xs text-green-700">${fileName}</p>
+                                    </div>
+                                </div>
+                                <button onclick="openReportUrl(null, '${submission.id}')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    Download
+                                </button>
+                                        </div>
+                                        </div>
+                    `;
+                }
+            }
+
+            // Add admin notes and upload section for Action Required submissions
+            if (isActionRequired && submission.adminNotes) {
+                cardContent += `
+                    <div class="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                        <div class="flex items-start">
+                            <div class="w-5 h-5 bg-orange-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                                <svg class="w-3 h-3 text-orange-600" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 9V13M12 17H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-orange-800 mb-1">Admin Notes</h4>
+                                <p class="text-sm text-orange-700">${submission.adminNotes}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 class="text-sm font-medium text-black mb-2">Upload Additional Images</h4>
+                        <p class="text-xs text-black mb-3">Please upload additional images as requested by the admin.</p>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-2">
+                                <input type="file" 
+                                       id="upload-${submission.id}" 
+                                       accept="image/*" 
+                                       multiple 
+                                       class="hidden">
+                                <label for="upload-${submission.id}" 
+                                       class="w-full bg-[#89CFF0] text-white text-sm font-medium py-2 px-4 rounded-lg text-center cursor-pointer">
+                                    Upload Images
+                                </label>
+                            </div>
+                            
+                            <div id="upload-preview-${submission.id}" class="hidden">
+                                <div class="text-xs text-black mb-2">Selected images:</div>
+                                <div id="preview-container-${submission.id}" class="flex space-x-2 mb-3"></div>
+                                <button onclick="submitAdditionalImages('${submission.id}')" 
+                                        class="w-full bg-[#89CFF0] text-white text-sm font-medium py-2 px-4 rounded-lg">
+                                    Submit Images
+                                        </button>
+                                    </div>
+                                        </div>
+                                        </div>
+                `;
+            }
+            
+            // Add admin notes for Rejected submissions
+            if (submission.status === 'Rejected' && submission.adminNotes) {
+                cardContent += `
+                    <div class="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
+                        <div class="flex items-start">
+                            <div class="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                                <svg class="w-3 h-3 text-red-600" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 9V13M12 17H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-red-800 mb-1">Admin Notes</h4>
+                                <p class="text-sm text-red-700">${submission.adminNotes}</p>
+                            </div>
+                    </div>
+                </div>
+            `;
+            }
+
+            card.innerHTML = cardContent;
+            return card;
+        }
+
+        // Get status badge styling and text
+        function getStatusBadge(status) {
+                    switch (status) {
+            case 'Authenticated':
+                    return {
+                        bgClass: 'bg-green-100',
+                        textClass: 'text-green-700',
+                    text: 'Authenticated'
+                    };
+            case 'Pending Review':
+                    return {
+                        bgClass: 'bg-blue-100',
+                        textClass: 'text-blue-700',
+                        text: 'Pending Review'
+                    };
+            case 'Rejected':
+                    return {
+                        bgClass: 'bg-red-100',
+                        textClass: 'text-red-700',
+                        text: 'Rejected'
+                    };
+            case 'Action Required':
+                    return {
+                        bgClass: 'bg-orange-100',
+                        textClass: 'text-orange-700',
+                        text: 'Action Required'
+                    };
+                default:
+                    return {
+                        bgClass: 'bg-gray-100',
+                        textClass: 'text-gray-700',
+                        text: status
+                    };
+            }
+        }
+
+
+
+        // Format date for display
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                month: '2-digit', 
+                day: '2-digit', 
+                year: 'numeric' 
+            });
+        }
+
+        // Show error state
+        function showErrorState() {
+            const loadingState = document.getElementById('loading-state');
+            const emptyState = document.getElementById('empty-state');
+            const submissionsContainer = document.getElementById('submissions-container');
+            const errorState = document.getElementById('error-state');
+
+            loadingState.classList.add('hidden');
+            emptyState.classList.add('hidden');
+            submissionsContainer.classList.add('hidden');
+            errorState.classList.remove('hidden');
+        }
+
+        // Download authentication certificate
+        async function downloadCertificate(submissionId) {
+            let button = null;
+            let originalContent = '';
+            
+            try {
+                const userEmail = sessionStorage.getItem('userEmail');
+                
+                if (!userEmail) {
+                    console.error('No user email found in session storage');
+                    showToast('Unable to download certificate. Please login again.', 'error');
+                    return;
+                }
+
+                console.log('Downloading certificate for submission:', submissionId);
+
+                // Show loading state in button
+                button = event.target.closest('button');
+                originalContent = button.innerHTML;
+                button.innerHTML = `
+                    <div class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <span>Downloading...</span>
+                `;
+                button.disabled = true;
+
+                const response = await fetch(`/user/certificate/${submissionId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'user-email': userEmail
+                    }
+                });
+
+                if (response.ok) {
+                    // Get the filename from the response headers or use a default
+                    const contentDisposition = response.headers.get('content-disposition');
+                    let filename = 'authentication-certificate.pdf';
+                    
+                    if (contentDisposition) {
+                        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                        if (filenameMatch) {
+                            filename = filenameMatch[1];
+                        }
+                    }
+
+                    // Create blob and download
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    console.log('Certificate downloaded successfully');
+                    showToast('Certificate downloaded successfully!', 'success');
+                } else {
+                    console.error('Failed to download certificate:', response.status);
+                    showToast('Unable to download certificate. Please try again later.', 'error');
+                }
+
+            } catch (error) {
+                console.error('Error downloading certificate:', error);
+                showToast('An error occurred while downloading the certificate. Please try again.', 'error');
+            } finally {
+                // Restore button state
+                if (button && originalContent) {
+                    button.innerHTML = originalContent;
+                    button.disabled = false;
+                }
+            }
+        }
+
+        // Handle file upload for action required submissions
+        document.addEventListener('change', function(event) {
+            if (event.target.type === 'file' && event.target.id.startsWith('upload-')) {
+                const submissionId = event.target.id.replace('upload-', '');
+                const files = event.target.files;
+                
+                if (files && files.length > 0) {
+                    // Clear any existing selections
+                    if (window.selectedFiles && window.selectedFiles[submissionId]) {
+                        window.selectedFiles[submissionId] = null;
+                    }
+                    
+                    handleImageUpload(submissionId, files);
+                }
+            }
+        });
+
+        // Check and update authenticated submissions after page load
+        async function checkAuthenticatedSubmissions() {
+            try {
+                console.log('Checking authenticated submissions for report URLs...');
+                
+                // Get all authenticated submissions from the page
+                const authenticatedCards = document.querySelectorAll('.bg-white.rounded-lg');
+                let count = 0;
+                
+                for (const card of authenticatedCards) {
+                    // Find submission ID from the card
+                    const uploadInput = card.querySelector('input[id^="upload-"]');
+                    if (!uploadInput) continue; // Skip if no upload input (can't get ID)
+                    
+                    const submissionId = uploadInput.id.replace('upload-', '');
+                    
+                    // Check if this is an authenticated submission
+                    const statusBadge = card.querySelector('.bg-green-100.text-green-700');
+                    if (!statusBadge || statusBadge.textContent.trim() !== 'Authenticated') continue;
+                    
+                    // Check if it already has a download button
+                    const downloadButton = card.querySelector('button[onclick^="openReportUrl"]');
+                    if (downloadButton && downloadButton.getAttribute('onclick').includes('null')) {
+                        // This is an authenticated submission with a placeholder download button
+                        // Check database for report_url
+                        console.log(`Checking database for report_url for submission ${submissionId}`);
+                        const reportUrl = await checkReportUrl(submissionId);
+                        
+                        if (reportUrl && typeof reportUrl === 'string' && reportUrl.trim() !== '' && 
+                            !reportUrl.includes('example.com') && !reportUrl.includes('dummy.pdf')) {
+                            // Update the button to use the actual URL
+                            console.log(`Found valid report_url in database: ${reportUrl}`);
+                            downloadButton.setAttribute('onclick', `openReportUrl('${reportUrl}', '${submissionId}')`);
+                            count++;
+                        }
+                    }
+                }
+                
+                if (count > 0) {
+                    console.log(`Updated ${count} authenticated submission cards with report URLs from database`);
+                }
+            } catch (error) {
+                console.error('Error checking authenticated submissions:', error);
+            }
+        }
+        
+        // Initialize page - loadSubmissions is now called by authentication-submissions.js       
+        document.addEventListener('DOMContentLoaded', function() {
+            // Page is ready, Supabase integration will handle loading
+            console.log('[AUTH-SUBMISSIONS] Page initialized');
+            
+            // After a short delay, check authenticated submissions for report URLs
+            setTimeout(() => {
+                checkAuthenticatedSubmissions();
+            }, 2000); // Wait 2 seconds for the page to fully load and render
+        });
+
+        // Handle image upload for Action Required submissions
+        function handleImageUpload(submissionId, files) {
+            const previewContainer = document.getElementById(`preview-container-${submissionId}`);
+            const uploadPreview = document.getElementById(`upload-preview-${submissionId}`);
+            
+            // Clear previous previews
+            previewContainer.innerHTML = '';
+            
+            // Validate file count
+            if (files.length > 3) {
+                showToast('Please select no more than 3 images.', 'error');
+                return;
+            }
+            
+            // Validate file types
+            for (let file of files) {
+                if (!file.type.startsWith('image/')) {
+                    showToast('Please select only image files.', 'error');
+                    return;
+                }
+            }
+            
+            // Create previews
+            Array.from(files).forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.createElement('div');
+                    preview.className = 'relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200';
+                    preview.innerHTML = `
+                        <img src="${e.target.result}" class="w-full h-full object-cover" alt="Preview ${index + 1}">
+                        <button onclick="removeImagePreview('${submissionId}', ${index})" 
+                                class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">
+                            ×
+                        </button>
+                    `;
+                    previewContainer.appendChild(preview);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            // Store files for submission
+            window.selectedFiles = window.selectedFiles || {};
+            window.selectedFiles[submissionId] = files;
+            
+            // Show preview section
+            uploadPreview.classList.remove('hidden');
+        }
+
+        // Remove image preview
+        function removeImagePreview(submissionId, index) {
+            const previewContainer = document.getElementById(`preview-container-${submissionId}`);
+            const previews = previewContainer.children;
+            
+            if (previews[index]) {
+                previews[index].remove();
+            }
+            
+            // Update stored files
+            if (window.selectedFiles && window.selectedFiles[submissionId]) {
+                const files = Array.from(window.selectedFiles[submissionId]);
+                files.splice(index, 1);
+                window.selectedFiles[submissionId] = files;
+                
+                // Hide preview if no files left
+                if (files.length === 0) {
+                    document.getElementById(`upload-preview-${submissionId}`).classList.add('hidden');
+                }
+            }
+        }
+
+        // Function to directly check a submission's report_url in the database
+        async function checkReportUrl(submissionId) {
+            try {
+                console.log('Checking report_url for submission:', submissionId);
+                
+                const { data, error } = await window.supabaseClient
+                    .from('authentication_requests')
+                    .select('id, status, report_url')
+                    .eq('id', submissionId)
+                    .single();
+                
+                if (error) {
+                    console.error('Error checking report_url:', error);
+                    return null;
+                }
+                
+                console.log('Database record:', data);
+                return data.report_url;
+            } catch (error) {
+                console.error('Exception checking report_url:', error);
+                return null;
+            }
+        }
+        
+        // Open report URL in a new tab
+        async function openReportUrl(url, submissionId) {
+            // Prevent event propagation
+            event.stopPropagation();
+            
+            if (!url || url === 'null' || url === 'undefined') {
+                console.error('No report URL provided in function call');
+                
+                // Try to get the URL directly from the database
+                if (submissionId) {
+                    showToast('Retrieving report URL...', 'info');
+                    const dbUrl = await checkReportUrl(submissionId);
+                    
+                    if (dbUrl && typeof dbUrl === 'string' && dbUrl.trim() !== '' && 
+                        !dbUrl.includes('example.com') && !dbUrl.includes('dummy.pdf')) {
+                        console.log('Retrieved valid URL from database:', dbUrl);
+                        window.open(dbUrl, '_blank');
+                        return;
+                    } else {
+                        console.error('No valid URL found in database');
+                        showToast('Report URL not available', 'error');
+                        return;
+                    }
+                }
+                
+                showToast('Report URL is missing', 'error');
+                return;
+            }
+            
+            // Validate URL
+            if (url.includes('example.com') || url.includes('dummy.pdf')) {
+                console.error('Invalid report URL:', url);
+                showToast('Invalid report URL', 'error');
+                return;
+            }
+            
+            console.log('Opening report URL:', url);
+            window.open(url, '_blank');
+        }
+        
+        // Submit additional images to Supabase
+        async function submitAdditionalImages(submissionId) {
+            try {
+                if (!window.selectedFiles || !window.selectedFiles[submissionId]) {
+                    showToast('Please select images to upload.', 'error');
+                    return;
+                }
+                
+                const files = window.selectedFiles[submissionId];
+                if (files.length === 0) {
+                    showToast('Please select at least one image.', 'error');
+                    return;
+                }
+
+                showToast('Uploading images...', 'info');
+
+                // Upload each file to Supabase Storage
+                const uploadedUrls = [];
+                
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    // Generate a unique filename with timestamp and index
+                    const timestamp = Date.now();
+                    const fileName = `${timestamp}_${i}.${file.name.split('.').pop()}`;
+                    const filePath = `${submissionId}/step-additional/${fileName}`;
+                    
+                    console.log(`[UPLOAD] Uploading to auth-photos bucket, path: ${filePath}`);
+                    
+                    try {
+                        // Upload to auth-photos bucket
+                        const { data, error } = await supabaseClient.storage
+                            .from('auth-photos')
+                            .upload(filePath, file, {
+                                cacheControl: '3600',
+                                upsert: true // Use upsert to overwrite if file exists
+                            });
+                        
+                        if (error) {
+                            console.error('[UPLOAD] Error uploading file:', error);
+                            throw new Error(`Failed to upload ${file.name}: ${error.message}`);
+                        }
+                        
+                        console.log('[UPLOAD] File uploaded successfully:', data);
+                        
+                        // Get public URL
+                        const { data: urlData } = supabaseClient.storage
+                            .from('auth-photos')
+                            .getPublicUrl(filePath);
+                        
+                        const publicUrl = urlData.publicUrl;
+                        uploadedUrls.push(publicUrl);
+                        console.log(`[UPLOAD] File public URL: ${publicUrl}`);
+                    } catch (uploadError) {
+                        console.error('[UPLOAD] Upload error:', uploadError);
+                        throw new Error(`Upload failed: ${uploadError.message}`);
+                    }
+                }
+                
+                console.log('[UPLOAD] All files uploaded, updating database with URLs:', uploadedUrls);
+                
+                try {
+                    // Update the authentication_requests table with the array of URLs
+                    // Only include fields that exist in the table
+                    const updatePayload = {
+                        additional_images: uploadedUrls,
+                        status: 'Pending Review',
+                        updated_at: new Date().toISOString()
+                    };
+                    
+                    console.log('[UPLOAD] Update payload:', updatePayload);
+                    
+                    const { data: updateData, error: updateError } = await supabaseClient
+                        .from('authentication_requests')
+                        .update(updatePayload)
+                        .eq('id', submissionId)
+                        .select();
+                    
+                    if (updateError) {
+                        console.error('[UPLOAD] Error updating submission:', updateError);
+                        throw new Error(`Failed to update submission: ${updateError.message}`);
+                    }
+                    
+                    console.log('[UPLOAD] Database updated successfully:', updateData);
+                    
+                    // Clear stored files
+                    delete window.selectedFiles[submissionId];
+                    
+                    // Hide preview
+                    document.getElementById(`upload-preview-${submissionId}`).classList.add('hidden');
+                    
+                    showToast('Images uploaded successfully! Your submission has been updated for admin review.', 'success');
+                    
+                    // Refresh the submissions list
+                    setTimeout(() => {
+                        loadSubmissions();
+                    }, 1000);
+                } catch (dbError) {
+                    console.error('[UPLOAD] Database update error:', dbError);
+                    showToast(`Error updating submission: ${dbError.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('[UPLOAD] Error in submitAdditionalImages:', error);
+                showToast(`Error uploading images: ${error.message}`, 'error');
+            }
+        }
+    </script>
+
+    <!-- Authentication Check -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-init.js"></script>
+    <script src="supabase-auth.js"></script>
+</body>
+</html> 

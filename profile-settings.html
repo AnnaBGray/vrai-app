@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account & Security - Vrai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-init.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#89CFF0',
+                        'primary-dark': '#7ab8d9',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Playfair Display', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-[#EAF6FC] font-sans text-[#1A1A1A] antialiased">
+    <div class="w-full max-w-md mx-auto pb-20">
+        <!-- Header -->
+        <div class="px-4 pt-8 pb-6">
+            <div class="flex items-center mb-2">
+                <button onclick="window.location.href='settings.html'" class="flex items-center justify-center w-10 h-10 rounded-lg mr-3">
+                    <svg class="w-6 h-6 text-gray-600" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h1 class="font-display text-2xl font-semibold text-gray-900">Account & Security</h1>
+            </div>
+            <p class="text-gray-600 text-sm ml-13">Manage your account and privacy</p>
+        </div>
+
+        <!-- Account Management Section -->
+        <div class="mx-4 mb-6">
+            <h2 class="font-display text-lg font-semibold text-gray-900 mb-3">Account Management</h2>
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <!-- Change Password -->
+                <div class="border-b border-gray-100">
+                    <div class="flex items-center justify-between p-4 cursor-pointer" onclick="window.location.href='change-password.html'">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M18 8H17V6C17 3.24 14.76 1 12 1C9.24 1 7 3.24 7 6V8H6C4.9 8 4 8.9 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.9 19.1 8 18 8ZM12 17C10.9 17 10 16.1 10 15C10 13.9 10.9 13 12 13C13.1 13 14 13.9 14 15C14 16.1 13.1 17 12 17ZM15.1 8H8.9V6C8.9 4.29 10.29 2.9 12 2.9C13.71 2.9 15.1 4.29 15.1 6V8Z" fill="currentColor"/>
+                            </svg>
+                            <div>
+                                <span class="text-gray-900 font-medium">Change Password</span>
+                                <p class="text-sm text-gray-500">Update your account password</p>
+                            </div>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                            <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Two-Factor Authentication -->
+                <div class="border-b border-gray-100">
+                    <div class="flex items-center justify-between p-4">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="currentColor"/>
+                            </svg>
+                            <div>
+                                <span class="text-gray-900 font-medium">Two-Factor Authentication</span>
+                                <p class="text-sm text-gray-500">Email verification required when signing in</p>
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <input type="checkbox" id="twoFactor" class="sr-only">
+                            <label for="twoFactor" class="block w-12 h-6 bg-gray-200 rounded-full cursor-pointer transition-colors">
+                                <div class="w-5 h-5 bg-white rounded-full shadow-sm transform translate-x-1 translate-y-0.5 transition-transform"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Login Activity -->
+                <div>
+                    <div class="flex items-center justify-between p-4 cursor-pointer" onclick="window.location.href='login-activity.html'">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="currentColor"/>
+                            </svg>
+                            <div>
+                                <span class="text-gray-900 font-medium">Login Activity</span>
+                                <p class="text-sm text-gray-500">View recent sign-ins</p>
+                            </div>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                            <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy & Security Section -->
+        <div class="mx-4 mb-6">
+            <h2 class="font-display text-lg font-semibold text-gray-900 mb-3">Privacy & Security</h2>
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <!-- Data Privacy Settings -->
+                <div class="border-b border-gray-100">
+                    <div class="flex items-center justify-between p-4">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="currentColor"/>
+                            </svg>
+                            <div>
+                                <span class="text-gray-900 font-medium">Data Privacy Settings</span>
+                                <p class="text-sm text-gray-500">Allow usage data sharing</p>
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <input type="checkbox" id="dataPrivacyToggle" class="sr-only">
+                            <label for="dataPrivacyToggle" class="block w-12 h-6 bg-gray-200 rounded-full cursor-pointer transition-colors">
+                                <div class="w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete My Account -->
+                <div>
+                    <div id="deleteAccountBtn" class="flex items-center justify-between p-4 cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M6 19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7H6V19ZM8 9H16V19H8V9ZM15.5 4L14.5 3H9.5L8.5 4H5V6H19V4H15.5Z" fill="currentColor"/>
+                            </svg>
+                            <div>
+                                <span class="text-gray-900 font-medium">Delete My Account</span>
+                                <p class="text-sm text-gray-500">Permanently remove your account and data</p>
+                            </div>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                            <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account Modal -->
+    <div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full mx-4 p-6 relative animate-fadeIn">
+            <button id="closeModalBtn" class="absolute top-3 right-3 text-gray-400 text-xl focus:outline-none">&times;</button>
+            <h2 class="font-display text-xl font-semibold text-gray-900 mb-2 text-center">Delete Account?</h2>
+            <p class="text-gray-600 text-center mb-6">This action is permanent and cannot be undone. Are you sure you want to proceed?</p>
+            <div class="flex gap-3 justify-center">
+                            <button id="cancelDeleteBtn" class="flex-1 bg-gray-100 text-gray-700 font-medium py-2 rounded-xl">Cancel</button>
+            <button id="confirmDeleteBtn" class="flex-1 bg-black text-white font-medium py-2 rounded-xl">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use the shared Supabase client from supabase-init.js
+        const supabase = window.supabaseClient;
+        
+        // Toggle switch functionality
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🔄 Initializing profile settings page...');
+            
+            try {
+                // Check if user is authenticated
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                
+                if (authError || !user) {
+                    console.error('❌ Authentication error:', authError);
+                    alert('You must be logged in to access this page.');
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                console.log('✅ User authenticated:', user.email);
+                
+                // Initialize Two-Factor Authentication toggle
+                initToggle(
+                    'twoFactor', 
+                    user.user_metadata?.enable2FA || false,
+                    async (newValue) => {
+                        try {
+                            const { error } = await supabase.auth.updateUser({
+                                data: { enable2FA: newValue }
+                            });
+                            
+                            if (error) throw error;
+                            
+                            console.log('✅ 2FA setting updated successfully to:', newValue);
+                            return true; // success
+                        } catch (error) {
+                            console.error('❌ Failed to update 2FA setting:', error);
+                            alert('Failed to update settings. Please try again.');
+                            return false; // failed
+                        }
+                    }
+                );
+                
+                // Initialize Data Privacy toggle
+                initToggle(
+                    'dataPrivacyToggle',
+                    user.user_metadata?.dataPrivacyAllowed || false,
+                    async (newValue) => {
+                        try {
+                            const { error } = await supabase.auth.updateUser({
+                                data: { dataPrivacyAllowed: newValue }
+                            });
+                            
+                            if (error) throw error;
+                            
+                            console.log('✅ Data privacy setting updated successfully to:', newValue);
+                            return true; // success
+                        } catch (error) {
+                            console.error('❌ Failed to update data privacy setting:', error);
+                            alert('Failed to update settings. Please try again.');
+                            return false; // failed
+                        }
+                    }
+                );
+                
+                // Add click handlers for navigation items
+                document.querySelectorAll('.cursor-pointer').forEach(item => {
+                    item.addEventListener('click', function() {
+                        // Add visual feedback
+                        this.style.transform = 'scale(0.98)';
+                        setTimeout(() => {
+                            this.style.transform = 'scale(1)';
+                        }, 150);
+
+                        // Custom modal for Delete My Account
+                        const titleElement = this.querySelector('span');
+                        if (titleElement && titleElement.textContent === 'Delete My Account') {
+                            document.getElementById('deleteModal').classList.remove('hidden');
+                            document.body.classList.add('overflow-hidden');
+                        }
+                    });
+                });
+                
+                // Modal logic
+                document.getElementById('closeModalBtn').onclick = closeDeleteModal;
+                document.getElementById('cancelDeleteBtn').onclick = closeDeleteModal;
+                document.getElementById('deleteModal').onclick = function(e) {
+                    if (e.target === this) closeDeleteModal();
+                };
+                function closeDeleteModal() {
+                    document.getElementById('deleteModal').classList.add('hidden');
+                    document.body.classList.remove('overflow-hidden');
+                }
+                document.getElementById('confirmDeleteBtn').onclick = function() {
+                    closeDeleteModal();
+                    // TODO: Add actual account deletion logic here
+                    alert('Account deletion initiated.');
+                };
+                
+            } catch (error) {
+                console.error('❌ Unexpected error:', error);
+                alert('An unexpected error occurred. Please try again later.');
+            }
+        });
+        
+        /**
+         * Initialize a toggle switch with the given state and update handler
+         * @param {string} toggleId - The ID of the toggle input element
+         * @param {boolean} initialState - The initial state of the toggle
+         * @param {Function} updateHandler - Async function to call when toggle changes
+         */
+        function initToggle(toggleId, initialState, updateHandler) {
+            const toggle = document.getElementById(toggleId);
+            if (!toggle) {
+                console.error(`❌ Toggle element not found: ${toggleId}`);
+                return;
+            }
+            
+            const label = toggle.nextElementSibling;
+            if (!label) {
+                console.error(`❌ Toggle label not found for: ${toggleId}`);
+                return;
+            }
+            
+            const slider = label.querySelector('div');
+            if (!slider) {
+                console.error(`❌ Toggle slider not found for: ${toggleId}`);
+                return;
+            }
+            
+            console.log(`🔄 Initializing toggle: ${toggleId} with state: ${initialState}`);
+            
+            // Set initial state
+            toggle.checked = initialState;
+            updateToggleAppearance(toggle, label, slider);
+            
+            // Add change event listener
+            toggle.addEventListener('change', async function(event) {
+                const newValue = this.checked;
+                console.log(`🔄 Toggle ${toggleId} changed to: ${newValue}`);
+                
+                // Disable toggle while updating
+                toggle.disabled = true;
+                
+                // Call the update handler
+                const success = await updateHandler(newValue);
+                
+                if (!success) {
+                    // Revert the toggle if update failed
+                    this.checked = !newValue;
+                }
+                
+                // Re-enable toggle and update appearance
+                toggle.disabled = false;
+                updateToggleAppearance(toggle, label, slider);
+            });
+        }
+        
+        /**
+         * Update the visual appearance of a toggle based on its checked state
+         * @param {HTMLInputElement} toggle - The toggle input element
+         * @param {HTMLElement} label - The toggle label element
+         * @param {HTMLElement} slider - The toggle slider element
+         */
+        function updateToggleAppearance(toggle, label, slider) {
+            console.log(`🎨 Updating toggle appearance: ${toggle.id}, checked: ${toggle.checked}`);
+            
+            // Simple direct DOM manipulation to update toggle appearance
+            if (toggle.checked) {
+                label.className = "block w-12 h-6 bg-[#89CFF0] rounded-full cursor-pointer transition-colors";
+                slider.className = "w-5 h-5 bg-white rounded-full shadow-sm transform translate-x-6 translate-y-0.5 transition-transform";
+            } else {
+                label.className = "block w-12 h-6 bg-gray-200 rounded-full cursor-pointer transition-colors";
+                slider.className = "w-5 h-5 bg-white rounded-full shadow-sm transform translate-x-1 translate-y-0.5 transition-transform";
+            }
+        }
+    </script>
+</body>
+</html> 

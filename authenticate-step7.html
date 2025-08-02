@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authenticate Bag - Step 7 - Vrai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#89CFF0',
+                        'primary-dark': '#7ab8d9',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Playfair Display', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Shared Navigation and Authentication -->
+    <script src="shared-navigation.js"></script>
+    <script src="supabase-upload.js"></script>
+    <script src="supabase-submission.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen bg-[#EAF6FC] font-sans text-[#1A1A1A] antialiased">
+    <div class="w-full max-w-md mx-auto min-h-screen flex flex-col authenticate-step-container">
+        <!-- Header with Progress -->
+        <div class="bg-white px-4 py-4 border-b border-gray-100">
+            <div class="flex items-center justify-between mb-2">
+                <button onclick="window.location.href='authenticate-step6.html'" class="flex items-center justify-center w-10 h-10 rounded-lg ">
+                    <svg class="w-6 h-6 text-gray-600" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h1 class="font-medium text-gray-900">Authenticate Bag</h1>
+                <div class="w-10"></div>
+            </div>
+            <div class="text-center">
+                <p class="text-sm text-gray-600">Step 7 of 10</p>
+                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div class="bg-primary-500 h-2 rounded-full transition-all duration-300" style="width: 70%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 px-4 py-6 space-y-6">
+            <!-- Section Title -->
+            <div class="text-center">
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Hardware & Zippers</h2>
+                <p class="text-sm text-gray-600">Focus on all metal hardware and zippers</p>
+            </div>
+
+            <!-- Example Image -->
+            <div class="bg-white rounded-xl p-4 border border-gray-200">
+                <div class="text-center mb-3">
+                    <p class="text-sm font-medium text-gray-700">Example Image</p>
+                </div>
+                <div class="w-full h-48 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+                    <div class="text-center">
+                        <svg class="w-10 h-10 text-gray-400 mx-auto mb-2" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="2"/>
+                            <polyline points="21,15 16,10 5,21" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <p class="text-xs text-gray-500">Hardware close-up example</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Take Photo Section -->
+            <div class="space-y-4">
+                <div id="photoPreviewSection" class="hidden">
+                    <div class="bg-white rounded-xl p-4 border border-gray-200">
+                        <div class="text-center mb-3">
+                            <p class="text-sm font-medium text-gray-700">Your Photo</p>
+                        </div>
+                        <img id="previewImageMain" class="w-full aspect-square object-cover rounded-lg border border-gray-200" alt="Captured photo">
+                        <div class="text-center mt-3">
+                            <p class="text-sm text-green-600 font-medium">Photo captured ✓</p>
+                            <button id="retakeButtonMain" class="mt-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
+                                Retake Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="takePhotoButton" class="w-full bg-[#89CFF0] text-white font-semibold py-3 px-4 rounded-lg text-base flex items-center justify-center space-x-2">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                        <path d="M23 19C23 20.1 22.1 21 21 21H3C1.9 21 1 20.1 1 19V8C1 6.9 1.9 6 3 6H7L9 4H15L17 6H21C22.1 6 23 6.9 23 8V19ZM12 17C14.8 17 17 14.8 17 12C17 9.2 14.8 7 12 7C9.2 7 7 9.2 7 12C7 14.8 9.2 17 12 17ZM12 9C13.7 9 15 10.3 15 12C15 13.7 13.7 15 12 15C10.3 15 9 13.7 9 12C9 10.3 10.3 9 12 9Z" fill="currentColor"/>
+                    </svg>
+                    <span>Take Photo</span>
+                </button>
+                
+                <!-- Camera Input -->
+                <input type="file" id="cameraInput" class="hidden" accept="image/*" capture="environment" multiple="false">
+            </div>
+
+            <!-- Instructions -->
+            <div class="bg-white rounded-xl p-4">
+                <h3 class="text-sm font-medium text-gray-900 mb-2">Instructions:</h3>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• Show all zippers, clasps, and buckles</li>
+                    <li>• Capture brand engravings on hardware</li>
+                    <li>• Include rivets, studs, and lock mechanisms</li>
+                    <li>• Focus on the finish and quality of metal parts</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Bottom Action -->
+        <div class="p-4 bg-white border-t border-gray-100">
+            <button id="nextButton" class="w-full bg-gray-300 text-gray-500 font-medium py-3 px-4 rounded-lg text-base cursor-not-allowed transition-all duration-200" disabled>
+                Next
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const takePhotoButton = document.getElementById('takePhotoButton');
+        const cameraInput = document.getElementById('cameraInput');
+        const retakeButtonMain = document.getElementById('retakeButtonMain');
+        const nextButton = document.getElementById('nextButton');
+        const photoPreviewSection = document.getElementById('photoPreviewSection');
+        const previewImageMain = document.getElementById('previewImageMain');
+        
+        // Store the captured file for upload
+        let capturedFile = null;
+
+        // Function to trigger camera/file input
+        function triggerCamera() {
+            // Reset the input value to allow selecting the same file again
+            cameraInput.value = '';
+            cameraInput.click();
+        }
+
+        takePhotoButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            triggerCamera();
+        });
+
+        retakeButtonMain.addEventListener('click', (e) => {
+            e.preventDefault();
+            triggerCamera();
+        });
+
+        cameraInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                capturedFile = file;
+                
+                // Display the preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImageMain.src = e.target.result;
+                    photoPreviewSection.classList.remove('hidden');
+                    takePhotoButton.classList.add('hidden');
+
+                    // Enable next button
+                    nextButton.disabled = false;
+                    nextButton.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                    nextButton.classList.add('bg-[#89CFF0]', 'text-white', 'cursor-pointer');
+                };
+                reader.onerror = () => {
+                    console.error('Error reading file');
+                    alert('Error reading the selected image. Please try again.');
+                };
+                reader.readAsDataURL(file);
+            } else if (file) {
+                alert('Please select a valid image file.');
+            }
+        });
+
+        nextButton.addEventListener('click', async () => {
+            if (!nextButton.disabled && capturedFile) {
+                try {
+                    // Show loading state
+                    nextButton.textContent = 'Uploading...';
+                    nextButton.disabled = true;
+                    
+                    console.log('[STEP 7] Starting photo upload to Supabase');
+                    console.log('[STEP 7] File:', capturedFile.name, 'Size:', capturedFile.size, 'Type:', capturedFile.type);
+                    
+                    // Upload photo to Supabase
+                    const uploadedUrl = await window.photoUploader.uploadPhoto(capturedFile, 7);
+                    
+                    console.log('[STEP 7] Upload successful. URL:', uploadedUrl);
+                    
+                    // Check photoUrls array to confirm storage
+                    const currentUrls = window.photoUploader.getPhotoUrls();
+                    console.log('[STEP 7] Current photoUrls array:', currentUrls);
+                    console.log('[STEP 7] Step 7 URL in array:', currentUrls[6]);
+                    
+                    // Navigate to next step
+                window.location.href = 'authenticate-step8.html';
+                } catch (error) {
+                    console.error('[STEP 7] Error uploading photo:', error);
+                    alert('Failed to upload photo. Please try again.');
+                    
+                    // Reset button state
+                    nextButton.textContent = 'Next';
+                    nextButton.disabled = false;
+                }
+            }
+        });
+
+        // Initialize submission when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                console.log('[STEP7] Initializing submission...');
+                
+                // Wait a bit for all scripts to load
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Get current user ID
+                const userId = await getCurrentUserId();
+                console.log('[STEP7] Current user ID:', userId);
+                
+                // Get or create submission
+                const submissionId = await getOrCreateSubmission(userId);
+                console.log('[STEP7] Submission ID:', submissionId);
+                
+                // Store submission ID in session storage
+                sessionStorage.setItem('currentSubmissionId', submissionId);
+                console.log('[STEP7] Stored submission ID in session storage');
+                
+                // Set submission ID in photo uploader
+                if (window.photoUploader && typeof window.photoUploader.setSubmissionId === 'function') {
+                    window.photoUploader.setSubmissionId(submissionId);
+                    console.log('[STEP7] Set submission ID in photo uploader');
+                }
+                
+                // Check if we already have a photo for this step
+                if (window.photoUploader && typeof window.photoUploader.getPhotoUrls === 'function') {
+                    const urls = window.photoUploader.getPhotoUrls();
+                    console.log('[STEP7] Checking for existing photo. photoUrls:', urls);
+                    
+                    // If we have a photo for step 7 (index 6)
+                    if (urls && urls[6]) {
+                        console.log('[STEP7] Found existing photo:', urls[6]);
+                        
+                        // Show the photo in the preview
+                        previewImageMain.src = urls[6];
+                        photoPreviewSection.classList.remove('hidden');
+                        takePhotoButton.classList.add('hidden');
+                        
+                        // Enable next button
+                        nextButton.disabled = false;
+                        nextButton.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                        nextButton.classList.add('bg-[#89CFF0]', 'text-white', 'cursor-pointer');
+                    }
+                }
+            } catch (error) {
+                console.error('[STEP7] Error initializing submission:', error);
+            }
+        });
+    </script>
+
+    <!-- Authentication Check -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-init.js"></script>
+    <script src="supabase-auth.js"></script>
+</body>
+</html> 

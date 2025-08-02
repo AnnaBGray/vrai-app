@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vrai - Luxury Authentication</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="supabase-init.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#89CFF0',
+                        'primary-dark': '#7ab8d9',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Playfair Display', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-2xl p-8 shadow-soft">
+            <div class="text-center mb-8">
+                <h1 class="font-display text-2xl font-semibold text-gray-900 mb-2">Welcome back</h1>
+                <p class="text-gray-600 text-sm">Sign in to your Vrai account</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-6" novalidate>
+                <!-- Email -->
+                <div class="space-y-1">
+                    <label for="email" class="block text-sm text-gray-700">Email Address</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <input 
+                            type="text" 
+                            id="email" 
+                            name="email"
+                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900 text-sm transition-colors"
+                            placeholder="Enter your email"
+                        >
+                    </div>
+                    <p class="validation-message hidden text-red-500 text-xs mt-1">Email is required</p>
+                </div>
+
+                <!-- Password -->
+                <div class="space-y-1">
+                    <div class="flex items-center justify-between">
+                        <label for="password" class="block text-sm text-gray-700">Password</label>
+                        <a href="#" class="text-xs text-primary-500 hover:text-primary-600 transition-colors">
+                            Forgot password?
+                        </a>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <path d="M18 8H17V6C17 3.24 14.76 1 12 1C9.24 1 7 3.24 7 6V8H6C4.9 8 4 8.9 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.9 19.1 8 18 8ZM12 17C10.9 17 10 16.1 10 15C10 13.9 10.9 13 12 13C13.1 13 14 13.9 14 15C14 16.1 13.1 17 12 17ZM15.1 8H8.9V6C8.9 4.29 10.29 2.9 12 2.9C13.71 2.9 15.1 4.29 15.1 6V8Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password"
+                            class="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900 text-sm transition-colors"
+                            placeholder="Enter your password"
+                        >
+                        <button 
+                            type="button"
+                            class="toggle-password absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5C17 19.5 21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5ZM12 17C9.24 17 7 14.76 7 12C7 9.24 9.24 7 12 7C14.76 7 17 9.24 17 12C17 14.76 14.76 17 12 17ZM12 9C10.34 9 9 10.34 9 12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12C15 10.34 13.66 9 12 9Z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="validation-message hidden text-red-500 text-xs mt-1">Password is required</p>
+                </div>
+
+                <button 
+                    type="submit"
+                    class="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-2.5 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+                    style="background-color: #89CFF0; display: flex; width: 100%; padding: 10px; border-radius: 8px; margin: 20px 0; color: white; font-weight: bold;"
+                >
+                    <span>Sign In</span>
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 4L10.59 5.41L16.17 11H4V13H16.17L10.59 18.59L12 20L20 12L12 4Z" fill="currentColor"/>
+                    </svg>
+                </button>
+
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">or</span>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <button 
+                        type="button"
+                        class="w-full bg-black hover:bg-gray-900 text-white font-medium py-2.5 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+                    >
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                            <path d="M17.05 12.536C17.016 9.724 19.37 8.566 19.48 8.498C18.175 6.675 16.13 6.382 15.392 6.356C13.713 6.177 12.142 7.278 11.287 7.278C10.433 7.278 9.125 6.378 7.719 6.403C5.902 6.428 4.255 7.443 3.339 9.012C1.457 12.207 2.843 16.888 4.661 19.638C5.568 21.01 6.626 22.57 8.067 22.506C9.523 22.443 10.013 21.628 11.772 21.628C13.531 21.628 13.959 22.506 15.48 22.468C17.038 22.443 17.967 21.06 18.849 19.688C19.892 18.077 20.316 16.505 20.341 16.429C20.291 16.404 17.089 15.268 17.05 12.536Z" fill="currentColor"/>
+                        </svg>
+                        <span>Sign in with Apple</span>
+                    </button>
+
+                    <button 
+                        type="button"
+                        class="w-full bg-white hover:bg-gray-50 border border-gray-300 text-gray-900 font-medium py-2.5 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+                    >
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                            <path d="M21.8055 10.0415H21V10H12V14H17.6515C16.827 16.3285 14.6115 18 12 18C8.6865 18 6 15.3135 6 12C6 8.6865 8.6865 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C6.4775 2 2 6.4775 2 12C2 17.5225 6.4775 22 12 22C17.5225 22 22 17.5225 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="currentColor"/>
+                        </svg>
+                        <span>Sign in with Google</span>
+                    </button>
+                </div>
+
+                <div class="text-center pt-2">
+                    <p class="text-sm text-gray-600">
+                        Don't have an account? 
+                        <a href="signup.html" class="font-medium text-primary-500 hover:text-primary-600 transition-colors">Sign Up</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        // Debug script to check if the login button is present and styled correctly
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Debug: Checking login button');
+            const loginButton = document.querySelector('button[type="submit"]');
+            
+            if (loginButton) {
+                console.log('Debug: Login button found:', loginButton);
+                console.log('Debug: Login button styles:', window.getComputedStyle(loginButton));
+                
+                // Force the button to be visible with inline styles
+                loginButton.style.display = 'flex';
+                loginButton.style.backgroundColor = '#89CFF0';
+                loginButton.style.color = 'white';
+                loginButton.style.padding = '10px';
+                loginButton.style.borderRadius = '8px';
+                loginButton.style.width = '100%';
+                loginButton.style.marginTop = '24px';
+                loginButton.style.marginBottom = '24px';
+            } else {
+                console.error('Debug: Login button not found');
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report a Problem - Vrai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#89CFF0',
+                        'primary-dark': '#7ab8d9',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Playfair Display', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        select {
+            accent-color: #89CFF0;
+            border-color: #89CFF0;
+        }
+    </style>
+    <!-- Shared Navigation and Authentication -->
+    <script src="shared-navigation.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen bg-[#EAF6FC] font-sans text-[#1A1A1A] antialiased">
+    <div class="w-full max-w-md mx-auto pb-20">
+        <!-- Header -->
+        <div class="px-4 pt-8 pb-6">
+            <div class="flex items-center mb-2">
+                <button onclick="window.location.href='settings.html'" class="flex items-center justify-center w-10 h-10 rounded-lg mr-3">
+                    <svg class="w-6 h-6 text-gray-600" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h1 class="font-display text-2xl font-semibold text-gray-900">Report a Problem</h1>
+            </div>
+        </div>
+
+        <!-- Card Layout -->
+        <div class="px-4">
+            <div class="bg-white rounded-2xl shadow-sm p-6">
+                <form id="reportForm" class="" autocomplete="off" enctype="multipart/form-data">
+                    <!-- Contact Information -->
+                    <div class="space-y-3">
+                        <h2 class="font-display text-lg font-semibold text-gray-900 mb-1">Contact Information</h2>
+                        <div class="space-y-2">
+                            <label for="fullName" class="block text-sm font-medium text-gray-700">Full Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="fullName" name="fullName" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900" placeholder="Enter your full name">
+                        </div>
+                        <div class="space-y-2">
+                            <label for="email" class="block text-sm font-medium text-gray-700">Email Address <span class="text-red-500">*</span></label>
+                            <input type="email" id="email" name="email" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900" placeholder="Enter your email address">
+                        </div>
+                    </div>
+
+                    <!-- Problem Details -->
+                    <div class="space-y-3 mt-6">
+                        <h2 class="font-display text-lg font-semibold text-gray-900 mb-1">Problem Details</h2>
+                        <!-- Problem Type (Custom Dropdown) -->
+                        <div class="space-y-2 relative" id="problemTypeDropdownWrapper">
+                            <label for="problemTypeCustom" class="block text-sm font-medium text-gray-700">Problem Type <span class="text-red-500">*</span></label>
+                            <button type="button" id="problemTypeCustom" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900 flex justify-between items-center" aria-haspopup="listbox" aria-expanded="false">
+                                <span id="problemTypeSelected">Select a problem type</span>
+                                <svg class="w-4 h-4 ml-2 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <ul id="problemTypeList" class="absolute left-0 right-0 z-20 bg-white border border-gray-200 rounded-md shadow-lg mt-1 hidden max-h-60 overflow-auto" tabindex="-1" role="listbox">
+                                <li class="px-4 py-2 cursor-pointer text-gray-700 rounded" data-value="" aria-selected="true">Select a problem type</li>
+                                <li class="px-4 py-2 cursor-pointer text-gray-700 rounded" data-value="image-upload-failed">Image upload failed</li>
+                                <li class="px-4 py-2 cursor-pointer text-gray-700 rounded" data-value="wrong-verification-result">Wrong verification result</li>
+                                <li class="px-4 py-2 cursor-pointer text-gray-700 rounded" data-value="submission-stuck">Submission stuck / no response</li>
+                                <li class="px-4 py-2 cursor-pointer text-gray-700 rounded" data-value="others">Others</li>
+                            </ul>
+                            <input type="hidden" id="problemType" name="problemType" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label for="submissionId" class="block text-sm font-medium text-gray-700">Submission ID <span class="text-gray-400">(optional)</span></label>
+                            <input type="text" id="submissionId" name="submissionId" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900" placeholder="Enter your submission ID (if any)">
+                        </div>
+                        <div class="space-y-2">
+                            <label for="description" class="block text-sm font-medium text-gray-700">Description <span class="text-red-500">*</span></label>
+                            <textarea id="description" name="description" rows="4" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900 resize-none" placeholder="Please describe the issue..."></textarea>
+                        </div>
+                        <!-- Screenshot Upload -->
+                        <div class="flex flex-col items-center pt-3 pb-0 px-2">
+                            <button type="button" id="customUploadBtn" class="flex items-center justify-center gap-2 bg-[#EAF6FC] text-gray-800 font-normal h-11 w-full rounded-lg shadow-sm transition-colors focus:outline-none  text-base px-4" style="border-radius:8px;">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <path d="M16 16v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h2"/>
+                                    <polyline points="8 8 12 4 16 8"/>
+                                    <line x1="12" y1="4" x2="12" y2="16"/>
+                                </svg>
+                                Upload Files
+                            </button>
+                            <input type="file" id="screenshots" name="screenshots" accept="image/*" multiple class="hidden" max="5">
+                            <ul class="list-disc text-gray-700 text-sm mt-2 mb-1 ml-6 space-y-1 text-left w-full">
+                                <li>Maximum of 5 files</li>
+                                <li>Each file must not exceed 10MB</li>
+                            </ul>
+                            <ul id="fileList" class="text-sm text-gray-700 mt-1 space-y-1 w-full text-left"></ul>
+                            <div id="uploadError" class="text-xs text-red-500 mt-1 hidden w-full text-left"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Divider -->
+                    <div class="h-px bg-gray-200 mt-3 mb-4"></div>
+
+                    <!-- Acknowledgement -->
+                    <div class="space-y-2">
+                        <label class="flex items-start gap-3 cursor-pointer select-none">
+                            <input type="checkbox" id="acknowledge" class="mt-1 accent-primary rounded focus:ring-primary-500/20" required>
+                            <span class="text-sm text-gray-700">By submitting this enquiry, I consent to the collection, use, and disclosure of my personal data in accordance with Vrai's privacy policy.</span>
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button id="submitBtn" type="submit" class="w-full bg-gray-300 text-gray-500 font-medium py-3 px-4 rounded-xl text-base transition-all duration-200 cursor-not-allowed mt-6" disabled>
+                        Submit Report
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Success Toast -->
+        <div id="successToast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 hidden">
+            <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Report submitted successfully!</span>
+            </div>
+        </div>
+
+        <!-- Error Toast -->
+        <div id="errorToast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 hidden">
+            <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span id="errorMessage">An error occurred</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Get the Supabase client from the global variable
+        let supabase = window.supabaseClient;
+        
+        // If global client is not available, create a new one (fallback)
+        if (!supabase) {
+            console.warn('⚠️ Global Supabase client not found, creating a new one');
+            supabase = window.supabase.createClient(
+                'https://gyxakkxotjkdsjvbufiv.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5eGFra3hvdGprZHNqdmJ1Zml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMjc1MTMsImV4cCI6MjA2NzcwMzUxM30.RT0VJKgdYSUJXzA34diTOpCvenMT6qjMfHaLmCAvEpk'
+            );
+        }
+
+        const form = document.getElementById('reportForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const description = document.getElementById('description');
+        const problemType = document.getElementById('problemType');
+        const submissionId = document.getElementById('submissionId');
+        const acknowledge = document.getElementById('acknowledge');
+        const screenshots = document.getElementById('screenshots');
+        const successToast = document.getElementById('successToast');
+        const errorToast = document.getElementById('errorToast');
+        const errorMessage = document.getElementById('errorMessage');
+        const customUploadBtn = document.getElementById('customUploadBtn');
+        const uploadError = document.getElementById('uploadError');
+        const fileList = document.getElementById('fileList');
+
+        // Enable submit button only if required fields and checkbox are filled
+        function updateButtonState() {
+            const fullNameInput = document.getElementById('fullName');
+            const emailInput = document.getElementById('email');
+            
+            const requiredFilled = 
+                fullNameInput.value.trim() && 
+                emailInput.value.trim() && 
+                problemType.value && 
+                description.value.trim() && 
+                acknowledge.checked;
+                
+            if (requiredFilled) {
+                submitBtn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                submitBtn.classList.add('bg-primary', 'text-white', 'cursor-pointer');
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.classList.remove('bg-primary', 'text-white', 'cursor-pointer');
+                submitBtn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                submitBtn.disabled = true;
+            }
+        }
+        
+        // Add event listeners for all required fields
+        const fullNameInput = document.getElementById('fullName');
+        const emailInput = document.getElementById('email');
+        
+        [fullNameInput, emailInput, problemType, description, acknowledge].forEach(el => {
+            el.addEventListener('input', updateButtonState);
+            el.addEventListener('change', updateButtonState);
+        });
+
+        customUploadBtn.addEventListener('click', function() {
+            screenshots.click();
+        });
+
+        screenshots.addEventListener('change', function() {
+            uploadError.classList.add('hidden');
+            fileList.innerHTML = '';
+            const files = Array.from(screenshots.files);
+            let error = '';
+            if (files.length > 5) {
+                error = 'You can upload a maximum of 5 files.';
+            } else if (files.some(f => f.size > 10 * 1024 * 1024)) {
+                error = 'Each file must not exceed 10MB.';
+            }
+            if (error) {
+                uploadError.textContent = error;
+                uploadError.classList.remove('hidden');
+                screenshots.value = '';
+                return;
+            }
+            files.forEach(file => {
+                const li = document.createElement('li');
+                li.textContent = file.name;
+                fileList.appendChild(li);
+            });
+        });
+
+        // Show toast function
+        function showToast(isSuccess, message = '') {
+            if (isSuccess) {
+                successToast.classList.remove('hidden');
+                setTimeout(() => {
+                    successToast.classList.add('hidden');
+                }, 3000);
+            } else {
+                errorMessage.textContent = message || 'An error occurred';
+                errorToast.classList.remove('hidden');
+                setTimeout(() => {
+                    errorToast.classList.add('hidden');
+                }, 3000);
+            }
+        }
+
+        // Upload images to Supabase storage
+        async function uploadImages(files) {
+            const imageUrls = [];
+            const userId = sessionStorage.getItem('userId');
+            
+            if (!userId) {
+                throw new Error('User ID not found. Please log in again.');
+            }
+            
+            try {
+                for (const file of files) {
+                    // Generate a unique filename
+                    const timestamp = Date.now();
+                    const randomString = Math.random().toString(36).substring(2, 10);
+                    const fileExt = file.name.split('.').pop();
+                    const filePath = `${timestamp}-${randomString}.${fileExt}`;
+                    
+                    // Upload file to Supabase storage with owner metadata
+                    const { data, error } = await supabase.storage
+                        .from('problem-uploads')
+                        .upload(filePath, file, {
+                            cacheControl: '3600',
+                            upsert: false,
+                            metadata: {
+                                owner: userId
+                            }
+                        });
+                    
+                    if (error) {
+                        console.error('Error uploading image:', error);
+                        throw new Error(`Failed to upload image: ${error.message}`);
+                    }
+                    
+                    // Get public URL
+                    const { data: urlData } = supabase.storage
+                        .from('problem-uploads')
+                        .getPublicUrl(filePath);
+                    
+                    imageUrls.push(urlData.publicUrl);
+                }
+                
+                return imageUrls;
+            } catch (error) {
+                console.error('Error in uploadImages:', error);
+                throw error;
+            }
+        }
+
+        // Form submission
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Check privacy policy consent
+            if (!acknowledge.checked) {
+                showToast(false, 'Please agree to the privacy policy before submitting.');
+                return;
+            }
+            
+            // Get current user ID
+            const userId = sessionStorage.getItem('userId');
+            if (!userId) {
+                showToast(false, 'User ID not found. Please log in again.');
+                return;
+            }
+            
+            // Get full name and email
+            const fullNameInput = document.getElementById('fullName');
+            const emailInput = document.getElementById('email');
+            
+            if (!fullNameInput.value.trim()) {
+                showToast(false, 'Full name is required.');
+                return;
+            }
+            
+            if (!emailInput.value.trim()) {
+                showToast(false, 'Email address is required.');
+                return;
+            }
+            
+            // Disable submit button and show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            
+            try {
+                // Collect form data
+                const formData = {
+                    user_id: userId,
+                    full_name: fullNameInput.value.trim(),
+                    email: emailInput.value.trim(),
+                    description: description.value.trim(),
+                    problem_type: problemType.value,
+                    submission_id: submissionId.value.trim() || null,
+                    created_at: new Date().toISOString()
+                };
+                
+                // Upload images if any
+                const files = Array.from(screenshots.files);
+                if (files.length > 0) {
+                    try {
+                        const imageUrls = await uploadImages(files);
+                        formData.uploaded_file_url = imageUrls;
+                    } catch (error) {
+                        throw new Error(`Image upload failed: ${error.message}`);
+                    }
+                } else {
+                    formData.uploaded_file_url = [];
+                }
+                
+                // Log the data being sent to Supabase
+                console.log('Submitting data to problem_reports table:', formData);
+                
+                // Insert record into problem_reports table
+                const { data, error } = await supabase
+                    .from('problem_reports')
+                    .insert([formData]);
+                
+                if (error) {
+                    console.error('Error submitting report:', error);
+                    throw new Error(`Failed to submit report: ${error.message}`);
+                }
+                
+                console.log('Report submitted successfully:', data);
+                
+                // Show success message
+                showToast(true);
+                
+                // Reset form
+                form.reset();
+                fileList.innerHTML = '';
+                
+                // Reset button state
+                submitBtn.textContent = 'Submit Report';
+                submitBtn.classList.remove('bg-primary', 'text-white', 'cursor-pointer');
+                submitBtn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                submitBtn.disabled = true;
+                
+            } catch (error) {
+                console.error('Form submission error:', error);
+                
+                // Show error toast
+                showToast(false, error.message || 'Failed to submit report. Please try again.');
+                
+                // Reset button state
+                submitBtn.textContent = 'Submit Report';
+                submitBtn.disabled = false;
+                if (description.value.trim() && acknowledge.checked) {
+                    submitBtn.classList.add('bg-primary', 'text-white', 'cursor-pointer');
+                    submitBtn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                }
+            }
+        });
+
+        // Custom Dropdown for Problem Type
+        const dropdownBtn = document.getElementById('problemTypeCustom');
+        const dropdownList = document.getElementById('problemTypeList');
+        const dropdownSelected = document.getElementById('problemTypeSelected');
+        const dropdownInput = document.getElementById('problemType');
+        let dropdownOpen = false;
+
+        function closeDropdown() {
+            dropdownList.classList.add('hidden');
+            dropdownBtn.setAttribute('aria-expanded', 'false');
+            dropdownOpen = false;
+        }
+        function openDropdown() {
+            dropdownList.classList.remove('hidden');
+            dropdownBtn.setAttribute('aria-expanded', 'true');
+            dropdownOpen = true;
+        }
+        dropdownBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            dropdownOpen ? closeDropdown() : openDropdown();
+        });
+        document.addEventListener('click', function(e) {
+            if (!dropdownBtn.contains(e.target) && !dropdownList.contains(e.target)) {
+                closeDropdown();
+            }
+        });
+        dropdownList.addEventListener('click', function(e) {
+            if (e.target.matches('li[data-value]')) {
+                const value = e.target.getAttribute('data-value');
+                dropdownInput.value = value;
+                dropdownSelected.textContent = e.target.textContent;
+                // Highlight selected
+                dropdownList.querySelectorAll('li').forEach(li => {
+                    li.classList.remove('bg-primary', 'text-white', 'font-semibold');
+                    li.classList.add('text-gray-700');
+                });
+                if (value) {
+                    e.target.classList.add('bg-primary', 'text-white');
+                    e.target.classList.remove('text-gray-700');
+                }
+                closeDropdown();
+                updateButtonState();
+            }
+        });
+        // Keyboard accessibility
+        let dropdownItems = Array.from(dropdownList.querySelectorAll('li'));
+        dropdownBtn.addEventListener('keydown', function(e) {
+            if (!dropdownOpen && (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ')) {
+                openDropdown();
+                e.preventDefault();
+                dropdownItems[1].focus();
+            }
+        });
+        dropdownList.addEventListener('keydown', function(e) {
+            let idx = dropdownItems.indexOf(document.activeElement);
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (idx < dropdownItems.length - 1) dropdownItems[idx + 1].focus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (idx > 0) dropdownItems[idx - 1].focus();
+            } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                document.activeElement.click();
+            } else if (e.key === 'Escape') {
+                closeDropdown();
+                dropdownBtn.focus();
+            }
+        });
+        dropdownItems.forEach(item => {
+            item.setAttribute('tabindex', '0');
+        });
+
+        // Initialize button state
+        updateButtonState();
+    </script>
+
+    <!-- Authentication Check -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-init.js"></script>
+    <script src="supabase-auth.js"></script>
+</body>
+</html> 

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Vrai</title>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 24px;
+            color: #333;
+        }
+        
+        p {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #89CFF0;
+            box-shadow: 0 0 0 2px rgba(137, 207, 240, 0.2);
+        }
+        
+        button {
+            background-color: #89CFF0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 12px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button:hover {
+            background-color: #7ab8d9;
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .divider span {
+            padding: 0 10px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .social-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .apple-button {
+            background-color: black;
+            color: white;
+        }
+        
+        .google-button {
+            background-color: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .signup-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .signup-link a {
+            color: #89CFF0;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .error-message {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .success-message {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome back</h1>
+        <p>Sign in to your Vrai account</p>
+        
+        <div id="message" class="error-message"></div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password">
+            </div>
+            
+            <button type="submit" id="loginButton">
+                <span style="margin-right: 10px;">Sign In</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4L10.59 5.41L16.17 11H4V13H16.17L10.59 18.59L12 20L20 12L12 4Z" fill="white"/>
+                </svg>
+            </button>
+        </form>
+        
+        <div class="divider">
+            <span>or</span>
+        </div>
+        
+        <button class="social-button apple-button" id="appleLogin">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-right: 10px;">
+                <path d="M17.05 12.536C17.016 9.724 19.37 8.566 19.48 8.498C18.175 6.675 16.13 6.382 15.392 6.356C13.713 6.177 12.142 7.278 11.287 7.278C10.433 7.278 9.125 6.378 7.719 6.403C5.902 6.428 4.255 7.443 3.339 9.012C1.457 12.207 2.843 16.888 4.661 19.638C5.568 21.01 6.626 22.57 8.067 22.506C9.523 22.443 10.013 21.628 11.772 21.628C13.531 21.628 13.959 22.506 15.48 22.468C17.038 22.443 17.967 21.06 18.849 19.688C19.892 18.077 20.316 16.505 20.341 16.429C20.291 16.404 17.089 15.268 17.05 12.536Z" fill="white"/>
+            </svg>
+            <span>Sign in with Apple</span>
+        </button>
+        
+        <button class="social-button google-button" id="googleLogin">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-right: 10px;">
+                <path d="M21.8055 10.0415H21V10H12V14H17.6515C16.827 16.3285 14.6115 18 12 18C8.6865 18 6 15.3135 6 12C6 8.6865 8.6865 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C6.4775 2 2 6.4775 2 12C2 17.5225 6.4775 22 12 22C17.5225 22 22 17.5225 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#4285F4"/>
+            </svg>
+            <span>Sign in with Google</span>
+        </button>
+        
+        <div class="signup-link">
+            Don't have an account? <a href="signup.html">Sign Up</a>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Supabase client
+            const supabaseUrl = 'https://gyxakkxotjkdsjvbufiv.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5eGFra3hvdGprZHNqdmJ1Zml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMjc1MTMsImV4cCI6MjA2NzcwMzUxM30.RT0VJKgdYSUJXzA34diTOpCvenMT6qjMfHaLmCAvEpk';
+            const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+            
+            // Form elements
+            const loginForm = document.getElementById('loginForm');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const messageDiv = document.getElementById('message');
+            
+            // Show message function
+            function showMessage(message, type = 'error') {
+                messageDiv.textContent = message;
+                
+                if (type === 'success') {
+                    messageDiv.className = 'success-message';
+                } else {
+                    messageDiv.className = 'error-message';
+                }
+                
+                messageDiv.style.display = 'block';
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 5000);
+            }
+            
+            // Function to redirect user to appropriate dashboard
+            function redirectToDashboard(user) {
+                // Get user profile from profiles table
+                supabase
+                    .from('profiles')
+                    .select('is_admin, display_name')
+                    .eq('id', user.id)
+                    .single()
+                    .then(({ data, error }) => {
+                        if (error) {
+                            console.error('Error fetching user profile:', error);
+                            window.location.href = 'dashboard.html';
+                            return;
+                        }
+                        
+                        const isAdmin = data?.is_admin || false;
+                        const displayName = data?.display_name || 'User';
+                        
+                        // Store user info in localStorage
+                        localStorage.setItem('userEmail', user.email);
+                        localStorage.setItem('userId', user.id);
+                        localStorage.setItem('displayName', displayName);
+                        localStorage.setItem('isAdmin', isAdmin ? 'true' : 'false');
+                        
+                        // Redirect to appropriate dashboard
+                        window.location.href = isAdmin ? 'dashboard-admin.html' : 'dashboard.html';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching user profile:', error);
+                        window.location.href = 'dashboard.html';
+                    });
+            }
+            
+            // Login form submission
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                
+                // Basic validation
+                if (!email) {
+                    showMessage('Email is required');
+                    return;
+                }
+                
+                if (!password) {
+                    showMessage('Password is required');
+                    return;
+                }
+                
+                // Show loading state
+                const loginButton = document.getElementById('loginButton');
+                const originalButtonText = loginButton.innerHTML;
+                loginButton.innerHTML = '<span>Signing in...</span>';
+                loginButton.disabled = true;
+                
+                try {
+                    // Attempt login with Supabase
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+                    
+                    // Reset button state
+                    loginButton.innerHTML = originalButtonText;
+                    loginButton.disabled = false;
+                    
+                    if (error) {
+                        showMessage(error.message || 'Login failed. Please check your credentials.');
+                        return;
+                    }
+                    
+                    // Login successful
+                    showMessage('Login successful! Redirecting...', 'success');
+                    
+                    // Redirect to dashboard
+                    redirectToDashboard(data.user);
+                    
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showMessage('An unexpected error occurred. Please try again later.');
+                    
+                    // Reset button state
+                    loginButton.innerHTML = originalButtonText;
+                    loginButton.disabled = false;
+                }
+            });
+            
+            // Social login handlers
+            document.getElementById('appleLogin').addEventListener('click', async function() {
+                try {
+                    const { data, error } = await supabase.auth.signInWithOAuth({
+                        provider: 'apple'
+                    });
+                    
+                    if (error) {
+                        showMessage('Apple login failed. Please try again.');
+                    }
+                } catch (error) {
+                    showMessage('An unexpected error occurred. Please try again later.');
+                }
+            });
+            
+            document.getElementById('googleLogin').addEventListener('click', async function() {
+                try {
+                    const { data, error } = await supabase.auth.signInWithOAuth({
+                        provider: 'google'
+                    });
+                    
+                    if (error) {
+                        showMessage('Google login failed. Please try again.');
+                    }
+                } catch (error) {
+                    showMessage('An unexpected error occurred. Please try again later.');
+                }
+            });
+            
+            // Check if user is already logged in
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                if (session) {
+                    redirectToDashboard(session.user);
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

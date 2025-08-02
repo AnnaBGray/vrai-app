@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submission Detail - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#B0D6F8',
+                        'primary-dark': '#89CFF0',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for images section */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F3F4F6;
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+        
+        /* For Firefox */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #CBD5E1 #F3F4F6;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Add html2pdf.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Add jsPDF library for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <!-- Shared Navigation and Authentication -->
+    <script src="shared-navigation.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen bg-[#F9FAFB] font-sans text-[#1A1A1A] antialiased" data-admin-only>
+    <div class="w-full max-w-md mx-auto min-h-screen bg-[#F9FAFB]">
+        <!-- Top App Bar -->
+        <div class="bg-white shadow-sm sticky top-0 z-10">
+            <div class="flex items-center justify-between px-6 py-4">
+                <button onclick="history.back()" class="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <h1 class="text-lg font-semibold text-gray-900">Submission Detail</h1>
+                <div class="w-10"></div>
+            </div>
+        </div>
+
+        <!-- Content Container -->
+        <div class="px-4 py-6 space-y-6">
+            <!-- Submission Info Section -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Submission Info</h2>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Submission ID</span>
+                        <span class="text-sm font-medium text-gray-900">VR-2024-001</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Brand</span>
+                        <span class="text-sm font-medium text-gray-900">Louis Vuitton</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Model</span>
+                        <span class="text-sm font-medium text-gray-900">Neverfull MM</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Submitted Date</span>
+                        <span class="text-sm font-medium text-gray-900">Dec 15, 2024</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Submitted by</span>
+                        <span class="text-sm font-medium text-gray-900">sarah.j@email.com</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Status</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Pending Review
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Uploaded Images Section -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Uploaded Images</h2>
+                <div class="flex space-x-3 overflow-x-auto pb-2 custom-scrollbar">
+                    <!-- Image 1 -->
+                    <div class="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors" onclick="openImageModal('image1')">
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <!-- Image 2 -->
+                    <div class="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors" onclick="openImageModal('image2')">
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <!-- Image 3 -->
+                    <div class="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors" onclick="openImageModal('image3')">
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <!-- Image 4 -->
+                    <div class="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors" onclick="openImageModal('image4')">
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <!-- Image 5 -->
+                    <div class="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors" onclick="openImageModal('image5')">
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">Tap any image to view full size</p>
+            </div>
+
+            <!-- Admin Actions Section (Pending Only) -->
+            <div id="adminActionsSection" class="bg-white rounded-2xl p-5 shadow-sm">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Admin Actions</h2>
+                <div class="space-y-4">
+                    <!-- Status Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Review Status</label>
+                        <select id="statusSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            <option value="pending_review">Pending Review</option>
+                            <option value="authenticated">Authenticated</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="action_required">Action required</option>
+                        </select>
+                    </div>
+
+                    <!-- Internal Review Notes -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Internal Review Notes</label>
+                        <textarea id="reviewNotes" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none" placeholder="Add your internal review notes here..."></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button onclick="submitReview()" class="w-full bg-primary-dark text-white font-semibold py-3 rounded-lg text-sm">
+                        Save Review
+                    </button>
+                </div>
+            </div>
+
+            <!-- PDF Report Section (Approved Only) -->
+            <div id="pdfReportSection" class="hidden bg-white rounded-2xl p-5 shadow-sm">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Authentication Report</h2>
+                <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div class="flex items-center space-x-3">
+                        <div class="flex-shrink-0">
+                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-green-900">Authentication Report</p>
+                            <p class="text-xs text-green-700">VR-2024-001-Report.pdf</p>
+                        </div>
+                    </div>
+                    <button onclick="downloadReport()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        Download
+                    </button>
+                </div>
+            </div>
+
+            <!-- Review Notes Section (Rejected or Action Required) -->
+            <div id="reviewNotesSection" class="hidden space-y-3">
+                <div id="rejectionNotesContainer" class="p-4 bg-red-50 rounded-lg border border-red-200">
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <svg class="w-6 h-6 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-red-900 mb-2">Rejection Reason</p>
+                            <p class="text-sm text-red-800">The submitted images do not provide sufficient detail for authentication. The serial number is not clearly visible, and the stitching quality appears inconsistent with authentic Louis Vuitton craftsmanship. Please resubmit with clearer, high-resolution images showing all required angles.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="additionalInfoContainer" class="hidden p-4 bg-blue-50 rounded-lg border border-blue-200 mt-4">
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <svg class="w-6 h-6 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+            </div>
+                        <div>
+                            <p class="text-sm font-medium text-blue-900 mb-2">Additional Information Needed</p>
+                            <p class="text-sm text-blue-800">We need additional photos of the date code and interior lining to complete authentication. Please submit clear, well-lit images showing these details.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download PDF Report Section (Authenticated Only) -->
+            <!-- This section has been removed as we're using the top Authentication Report section instead -->
+        </div>
+
+        <!-- Bottom padding for navigation -->
+        <div class="h-20"></div>
+    </div>
+
+    <!-- PDF Report Template (Hidden) -->
+    <div id="pdf-report-template" style="display: none; padding: 2rem; font-family: sans-serif;">
+      <h2>Authentication Report</h2>
+
+      <p>
+        I have reviewed all the uploaded images of the handbag. Based on those images, which included those presented below, the item depicted therein is an authentic Hermès item.
+      </p>
+
+      <hr />
+
+      <p><strong>Customer Name:</strong> Jane Doe</p>
+      <p><strong>Submission ID:</strong> Vrai#000005</p>
+      <p><strong>Approved Date:</strong> Jul 19, 2025</p>
+      <p><strong>Brand / Model:</strong> Hermès / Hermes 01</p>
+
+      <hr />
+
+      <h3>Uploaded Images</h3>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+        <!-- Images will be dynamically loaded from the database -->
+      </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div id="successToast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 hidden max-w-sm w-full mx-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="text-sm font-medium">Review submitted successfully!</span>
+            </div>
+            <button onclick="closeToast()" class="ml-3 text-white focus:outline-none">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+        <div class="relative max-w-full max-h-full">
+            <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white hover:text-gray-300 z-10">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div id="modalImageContent" class="bg-gray-200 rounded-lg w-80 h-80 flex items-center justify-center">
+                <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get submission status from URL parameters or default to pending_review
+        function getSubmissionStatus() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('status') || 'pending_review';
+        }
+
+        // Get submission ID from URL parameters
+        function getSubmissionId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('submission_id');
+        }
+
+        // Format date to "Jul 19, 2025" format
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        // Load submission data from Supabase
+        async function loadSubmissionData() {
+            const submissionId = getSubmissionId();
+            
+            if (!submissionId) {
+                console.error('No submission ID provided in URL');
+                return;
+            }
+            
+            // Wait for Supabase client to be initialized
+            if (!window.supabaseClient) {
+                console.error('Supabase client not initialized');
+                return;
+            }
+            
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('authentication_requests')
+                    .select('id, human_readable_id, model_name, created_at, user_email, status, photo_urls, admin_notes, additional_images, report_url')
+                    .eq('id', submissionId)
+                    .single();
+                
+                if (error) throw error;
+                
+                if (!data) {
+                    console.error('Submission not found');
+                    return;
+                }
+                
+                // Debug photo_urls array
+                console.log('Photo URLs from database (raw):', JSON.stringify(data.photo_urls));
+                console.log('Additional images from database (raw):', JSON.stringify(data.additional_images));
+                
+                // Ensure photo_urls is properly handled
+                let photoUrls = data.photo_urls;
+                if (typeof photoUrls === 'string') {
+                    try {
+                        photoUrls = JSON.parse(photoUrls);
+                        console.log('Parsed photo_urls from string:', photoUrls);
+                    } catch (e) {
+                        console.error('Failed to parse photo_urls string:', e);
+                        photoUrls = [];
+                    }
+                }
+                
+                // Ensure photoUrls is an array
+                if (!Array.isArray(photoUrls)) {
+                    photoUrls = [];
+                    console.warn('photo_urls is not an array, creating empty array');
+                }
+                
+                // Process additional_images if they exist
+                let additionalImages = data.additional_images || [];
+                if (typeof additionalImages === 'string') {
+                    try {
+                        additionalImages = JSON.parse(additionalImages);
+                        console.log('Parsed additional_images from string:', additionalImages);
+                    } catch (e) {
+                        console.error('Failed to parse additional_images string:', e);
+                        additionalImages = [];
+                    }
+                }
+                
+                // Ensure additionalImages is an array
+                if (!Array.isArray(additionalImages)) {
+                    additionalImages = [];
+                    console.warn('additional_images is not an array, creating empty array');
+                }
+                
+                // Deep flatten the array to handle any level of nesting
+                const deepFlatten = (arr) => {
+                    return arr.reduce((acc, val) => {
+                        return Array.isArray(val) 
+                            ? acc.concat(deepFlatten(val)) 
+                            : acc.concat(val);
+                    }, []);
+                };
+                
+                // Flatten + filter photo_urls
+                const flattenedPhotoUrls = deepFlatten(photoUrls); // handles any level of nesting
+                const originalLength = flattenedPhotoUrls.length;
+                const cleanedPhotoUrls = flattenedPhotoUrls.filter(url =>
+                    url && typeof url === 'string' && url.trim()
+                );
+                
+                const skippedCount = originalLength - cleanedPhotoUrls.length;
+                console.log(`Cleaned photo_urls array: ${cleanedPhotoUrls.length} valid URLs, ${skippedCount} entries skipped`);
+                if (skippedCount > 0) {
+                    console.log('Skipped invalid entries:', flattenedPhotoUrls.filter(url => !url || typeof url !== 'string' || !url.trim()));
+                }
+                
+                // Flatten + filter additional_images
+                const flattenedAdditionalImages = deepFlatten(additionalImages);
+                const additionalOriginalLength = flattenedAdditionalImages.length;
+                const cleanedAdditionalImages = flattenedAdditionalImages.filter(url =>
+                    url && typeof url === 'string' && url.trim()
+                );
+                
+                const additionalSkippedCount = additionalOriginalLength - cleanedAdditionalImages.length;
+                console.log(`Cleaned additional_images array: ${cleanedAdditionalImages.length} valid URLs, ${additionalSkippedCount} entries skipped`);
+                if (additionalSkippedCount > 0) {
+                    console.log('Skipped invalid additional image entries:', flattenedAdditionalImages.filter(url => !url || typeof url !== 'string' || !url.trim()));
+                }
+                
+                // Combine both arrays of images
+                const allImages = [...cleanedPhotoUrls, ...cleanedAdditionalImages];
+                console.log(`Combined image arrays: ${allImages.length} total images (${cleanedPhotoUrls.length} original + ${cleanedAdditionalImages.length} additional)`);
+                
+                // Update data with the cleaned and combined image arrays
+                data.photo_urls = cleanedPhotoUrls;
+                data.additional_images = cleanedAdditionalImages;
+                data.all_images = allImages;
+                
+                // Populate submission info
+                populateSubmissionInfo(data);
+                
+                // Populate images with combined array
+                populateImages(data.all_images);
+                
+                // Set status for page layout
+                updatePageStatus(data.status, data.admin_notes, data.report_url);
+                
+            } catch (error) {
+                console.error('Error loading submission data:', error);
+            }
+        }
+        
+        // Validate URL format
+        function isValidUrl(url) {
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+                return false;
+            }
+            
+            try {
+                new URL(url);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        
+        // Populate submission info section
+        function populateSubmissionInfo(data) {
+            // Get all the span elements in the submission info section
+            const infoSection = document.querySelector('.bg-white.rounded-2xl.p-5.shadow-sm');
+            
+            // Submission ID
+            const submissionIdElement = infoSection.querySelector('.flex.justify-between.items-center:nth-child(1) .text-sm.font-medium');
+            submissionIdElement.textContent = data.human_readable_id || 'N/A';
+            
+            // Brand (hardcoded to Hermès)
+            const brandElement = infoSection.querySelector('.flex.justify-between.items-center:nth-child(2) .text-sm.font-medium');
+            brandElement.textContent = 'Hermès';
+            
+            // Model
+            const modelElement = infoSection.querySelector('.flex.justify-between.items-center:nth-child(3) .text-sm.font-medium');
+            modelElement.textContent = data.model_name || 'Unknown';
+            
+            // Submitted Date
+            const dateElement = infoSection.querySelector('.flex.justify-between.items-center:nth-child(4) .text-sm.font-medium');
+            dateElement.textContent = formatDate(data.created_at);
+            
+            // Submitted by
+            const userElement = infoSection.querySelector('.flex.justify-between.items-center:nth-child(5) .text-sm.font-medium');
+            userElement.textContent = data.user_email || 'Unknown';
+            
+            // Status
+            const statusBadge = infoSection.querySelector('.inline-flex.items-center');
+            statusBadge.textContent = data.status || 'Pending Review';
+        }
+        
+        // Populate images section
+        function populateImages(photoUrls) {
+            if (!photoUrls || !Array.isArray(photoUrls) || photoUrls.length === 0) {
+                console.log("No photo URLs available or empty array");
+                const imagesContainer = document.querySelector('.flex.space-x-3.overflow-x-auto');
+                imagesContainer.innerHTML = `
+                    <div class="w-full py-8 text-center">
+                        <p class="text-gray-500">No images available for this submission.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            console.log(`Rendering ${photoUrls.length} valid images`);
+            
+            const imagesContainer = document.querySelector('.flex.space-x-3.overflow-x-auto');
+            
+            // Clear existing placeholder images
+            imagesContainer.innerHTML = '';
+            
+            // Add images - we already know all URLs are valid at this point
+            photoUrls.forEach((url, index) => {
+                // Use 1-based indexing for display
+                const displayIndex = index + 1;
+                
+                // Determine if this is an additional image based on URL path
+                const isAdditionalImage = url.includes('/step-additional/');
+                const imageType = isAdditionalImage ? 'Additional' : 'Original';
+                
+                console.log(`Processing image ${displayIndex}/${photoUrls.length}, Type: ${imageType}, URL: ${url}`);
+                
+                // Create container for the image
+                const imageElement = document.createElement('div');
+                imageElement.className = 'flex-shrink-0 w-24 h-24 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors';
+                imageElement.setAttribute('data-image-index', displayIndex);
+                imageElement.setAttribute('data-image-type', imageType);
+                
+                // Use a placeholder for all images initially
+                imageElement.innerHTML = createPlaceholderHtml(displayIndex, isAdditionalImage);
+                
+                // Create an image element to test loading
+                const testImg = new Image();
+                testImg.crossOrigin = "anonymous";
+                
+                // Set up success handler
+                testImg.onload = function() {
+                    console.log(`Image ${displayIndex} (${imageType}) loaded successfully`);
+                    // Replace placeholder with actual image
+                    imageElement.innerHTML = `
+                        <div class="w-full h-full overflow-hidden rounded-lg relative">
+                            <img 
+                                id="submission-img-${displayIndex}" 
+                                src="${url}" 
+                                alt="Submission image ${displayIndex}" 
+                                class="w-full h-full object-cover"
+                                crossorigin="anonymous"
+                            >
+                            <div class="absolute bottom-0 right-0 bg-black bg-opacity-50 text-white px-1 py-0.5 text-[10px] rounded-tl">
+                                ${displayIndex}
+                            </div>
+                            ${isAdditionalImage ? `
+                            <div class="absolute top-0 left-0 bg-blue-500 bg-opacity-70 text-white px-1 py-0.5 text-[8px] rounded-br">
+                                ADDITIONAL
+                            </div>` : ''}
+                        </div>
+                    `;
+                    
+                    // Set click handler with working URL
+                    imageElement.onclick = function() { openImageModal(url, displayIndex, isAdditionalImage); };
+                };
+                
+                // Set up error handler
+                testImg.onerror = function() {
+                    console.error(`Failed to load image ${displayIndex} (${imageType}) from URL: ${url}`);
+                    // Keep the placeholder but update the click handler
+                    imageElement.onclick = function() { 
+                        showErrorModal(`Image ${displayIndex} (${imageType}) could not be loaded`, displayIndex);
+                    };
+                };
+                
+                // Start loading the image
+                testImg.src = url;
+                
+                // Add to container
+                imagesContainer.appendChild(imageElement);
+            });
+        }
+        
+        // Create placeholder HTML
+        function createPlaceholderHtml(imageNumber, isAdditional = false) {
+            return `
+                <div class="w-full h-full flex flex-col items-center justify-center bg-gray-100 relative">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span class="text-xs text-gray-500 mt-1">Image ${imageNumber}</span>
+                    ${isAdditional ? `
+                    <div class="absolute top-0 left-0 bg-blue-500 bg-opacity-70 text-white px-1 py-0.5 text-[8px] rounded-br">
+                        ADDITIONAL
+                    </div>` : ''}
+                </div>
+            `;
+        }
+        
+        // Show error modal
+        function showErrorModal(errorMessage, imageIndex) {
+            const modal = document.getElementById('imageModal');
+            const modalContent = document.getElementById('modalImageContent');
+            
+            console.log(`Showing error modal for image ${imageIndex}: ${errorMessage}`);
+            
+            modalContent.innerHTML = `
+                <div class="flex flex-col items-center justify-center">
+                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    <span class="text-white mt-4">${errorMessage}</span>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+        
+        // Modified openImageModal function to display actual images
+        function openImageModal(imageUrl, imageIndex, isAdditional = false) {
+            const modal = document.getElementById('imageModal');
+            const modalContent = document.getElementById('modalImageContent');
+            
+            const imageType = isAdditional ? 'Additional' : 'Original';
+            console.log(`Opening modal for image ${imageIndex} (${imageType}) with URL: ${imageUrl}`);
+            
+            // Update modal content with the actual image
+            if (imageUrl) {
+                // Create an image element to test loading
+                const testImg = new Image();
+                testImg.crossOrigin = "anonymous";
+                
+                // Set up success handler
+                testImg.onload = function() {
+                    modalContent.innerHTML = `
+                        <div class="relative">
+                            <div class="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs flex items-center">
+                                <span>Image ${imageIndex}</span>
+                                ${isAdditional ? `
+                                <span class="ml-2 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded">ADDITIONAL</span>
+                                ` : ''}
+                            </div>
+                            <img 
+                                src="${imageUrl}" 
+                                alt="Submission image ${imageIndex}" 
+                                class="max-w-full max-h-[80vh] object-contain"
+                                crossorigin="anonymous"
+                            >
+                        </div>
+                    `;
+                };
+                
+                // Set up error handler
+                testImg.onerror = function() {
+                    showErrorModal(`Failed to load image ${imageIndex} (${imageType})`, imageIndex);
+                };
+                
+                // Start loading the image
+                testImg.src = imageUrl;
+                
+                // Show loading indicator while image loads
+                modalContent.innerHTML = `
+                    <div class="flex flex-col items-center justify-center">
+                        <svg class="animate-spin h-10 w-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="text-white mt-4">Loading image ${imageIndex} (${imageType})...</span>
+                    </div>
+                `;
+            } else {
+                // Fallback to placeholder
+                showErrorModal(`No image available for position ${imageIndex}`, imageIndex);
+            }
+            
+            modal.classList.remove('hidden');
+        }
+        
+        // Handle image loading errors
+        function handleImageError(img, imageNumber) {
+            console.error(`Failed to load image ${imageNumber}`);
+            
+            // Replace with placeholder
+            const parent = img.closest('.w-full.h-full.overflow-hidden');
+            if (parent) {
+                parent.innerHTML = `
+                    <div class="w-full h-full flex flex-col items-center justify-center bg-gray-100">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        <span class="text-xs text-gray-500 mt-1">Error</span>
+                    </div>
+                `;
+            }
+        }
+        
+        // Handle modal image loading errors
+        function handleModalImageError(img, imageIndex) {
+            console.error(`Failed to load image ${imageIndex} in modal`);
+            const parent = img.parentElement;
+            parent.innerHTML = `
+                <div class="flex flex-col items-center justify-center">
+                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    <span class="text-white mt-4">Failed to load image ${imageIndex}</span>
+                </div>
+            `;
+        }
+        
+        // Update page status based on submission status
+        function updatePageStatus(status, adminNotes, reportUrl) {
+            const adminActionsSection = document.getElementById('adminActionsSection');
+            const pdfReportSection = document.getElementById('pdfReportSection');
+            const reviewNotesSection = document.getElementById('reviewNotesSection');
+            const rejectionNotesContainer = document.getElementById('rejectionNotesContainer');
+            const additionalInfoContainer = document.getElementById('additionalInfoContainer');
+            const statusBadge = document.querySelector('.inline-flex.items-center.px-2\\.5');
+
+            // Update status badge class and text
+            if (status === 'Authenticated') {
+                statusBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800';
+                statusBadge.textContent = 'Authenticated';
+                
+                // Show PDF report section, hide admin actions
+                adminActionsSection.classList.add('hidden');
+                reviewNotesSection.classList.add('hidden');
+                
+                // Store the report URL for the download function if available
+                if (reportUrl && reportUrl.trim()) {
+                    pdfReportSection.setAttribute('data-report-url', reportUrl);
+                    pdfReportSection.classList.remove('hidden');
+                } else {
+                    pdfReportSection.classList.add('hidden');
+                }
+                
+            } else if (status === 'Rejected') {
+                statusBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800';
+                statusBadge.textContent = 'Rejected';
+                
+                // Show rejection notes, hide admin actions
+                adminActionsSection.classList.add('hidden');
+                pdfReportSection.classList.add('hidden');
+                reviewNotesSection.classList.remove('hidden');
+                rejectionNotesContainer.classList.remove('hidden');
+                additionalInfoContainer.classList.add('hidden');
+                
+                // Populate rejection notes if available, otherwise use fallback
+                const rejectionReasonElement = rejectionNotesContainer.querySelector('p.text-sm.text-red-800');
+                if (rejectionReasonElement) {
+                    if (adminNotes && adminNotes.trim()) {
+                        rejectionReasonElement.textContent = adminNotes;
+            } else {
+                        // Fallback rejection reason
+                        rejectionReasonElement.textContent = 'The submitted images do not provide sufficient detail for authentication. The serial number is not clearly visible, and the stitching quality appears inconsistent with authentic craftsmanship. Please resubmit with clearer, high-resolution images showing all required angles.';
+                    }
+                }
+                
+            } else if (status === 'Action Required') {
+                statusBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800';
+                statusBadge.textContent = 'Action Required';
+                
+                // Show additional info notes, hide admin actions
+                adminActionsSection.classList.add('hidden');
+                pdfReportSection.classList.add('hidden');
+                reviewNotesSection.classList.remove('hidden');
+                rejectionNotesContainer.classList.add('hidden');
+                additionalInfoContainer.classList.remove('hidden');
+                
+                // Populate additional info notes if available, otherwise use fallback
+                const additionalInfoElement = additionalInfoContainer.querySelector('p.text-sm.text-blue-800');
+                if (additionalInfoElement) {
+                    if (adminNotes && adminNotes.trim()) {
+                        additionalInfoElement.textContent = adminNotes;
+                    } else {
+                        // Fallback additional info message
+                        additionalInfoElement.textContent = 'We need additional photos of the date code and interior lining to complete authentication. Please submit clear, well-lit images showing these details.';
+                    }
+                }
+                
+            } else {
+                // Default to pending review
+                statusBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800';
+                statusBadge.textContent = 'Pending Review';
+                
+                // Show admin actions section
+                adminActionsSection.classList.remove('hidden');
+                pdfReportSection.classList.add('hidden');
+                reviewNotesSection.classList.add('hidden');
+        }
+
+            // Update status select to match current status
+            const statusSelect = document.getElementById('statusSelect');
+            if (statusSelect) {
+                for (let i = 0; i < statusSelect.options.length; i++) {
+                    if (statusSelect.options[i].text === status) {
+                        statusSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.add('hidden');
+        }
+
+        // Direct update of report_url for a submission
+        async function updateReportUrl(submissionId, reportUrl) {
+            if (!submissionId || !reportUrl) {
+                console.error('Missing required parameters for updateReportUrl');
+                return { success: false, error: 'Missing parameters' };
+            }
+            
+            try {
+                console.log(`Direct update of report_url for submission ${submissionId} with URL: ${reportUrl}`);
+                
+                // First, check if the submission exists
+                const { data: checkData, error: checkError } = await window.supabaseClient
+                    .from('authentication_requests')
+                    .select('id, status, report_url')
+                    .eq('id', submissionId)
+                    .single();
+                
+                if (checkError) {
+                    console.error('Error checking submission:', checkError);
+                    return { success: false, error: checkError };
+                }
+                
+                if (!checkData) {
+                    console.error('Submission not found:', submissionId);
+                    return { success: false, error: 'Submission not found' };
+                }
+                
+                console.log('Current submission data:', checkData);
+                
+                // Only update if necessary
+                if (checkData.report_url === reportUrl) {
+                    console.log('Report URL already matches, no update needed');
+                    return { success: true, message: 'No update needed' };
+                }
+                
+                // Update only the report_url field
+                const { data: updateData, error: updateError } = await window.supabaseClient
+                    .from('authentication_requests')
+                    .update({ 
+                        report_url: reportUrl,
+                        // Also ensure status is Authenticated
+                        status: 'Authenticated'
+                    })
+                    .eq('id', submissionId)
+                    .select();
+                
+                if (updateError) {
+                    console.error('Error updating report_url:', updateError);
+                    return { success: false, error: updateError };
+                }
+                
+                console.log('Report URL updated successfully:', updateData);
+                return { success: true, data: updateData };
+            } catch (error) {
+                console.error('Error in updateReportUrl:', error);
+                return { success: false, error };
+            }
+        }
+        
+        // Function to clean up any records with dummy URLs
+        async function cleanupDummyUrls() {
+            try {
+                console.log('Checking for records with dummy URLs...');
+                
+                // Find records with dummy URLs
+                const { data: recordsWithDummyUrls, error: findError } = await window.supabaseClient
+                    .from('authentication_requests')
+                    .select('id, report_url')
+                    .or('report_url.ilike.%example.com%,report_url.ilike.%dummy.pdf%')
+                    .limit(100);
+                
+                if (findError) {
+                    console.error('Error finding records with dummy URLs:', findError);
+                    return;
+                }
+                
+                if (!recordsWithDummyUrls || recordsWithDummyUrls.length === 0) {
+                    console.log('No records with dummy URLs found.');
+                    return;
+                }
+                
+                console.log(`Found ${recordsWithDummyUrls.length} records with dummy URLs:`, recordsWithDummyUrls);
+                
+                // Update these records to set report_url to null
+                const recordIds = recordsWithDummyUrls.map(record => record.id);
+                
+                const { data: updateResult, error: updateError } = await window.supabaseClient
+                    .from('authentication_requests')
+                    .update({ report_url: null })
+                    .in('id', recordIds);
+                
+                if (updateError) {
+                    console.error('Error cleaning up dummy URLs:', updateError);
+                } else {
+                    console.log(`Successfully cleaned up ${recordIds.length} records with dummy URLs.`);
+                }
+            } catch (error) {
+                console.error('Error in cleanupDummyUrls:', error);
+            }
+        }
+        
+        // Initialize page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait for Supabase client to be initialized
+            if (window.supabaseClient) {
+                loadSubmissionData();
+                cleanupDummyUrls(); // Add this line to clean up dummy URLs
+            } else {
+                // Check every 100ms for up to 5 seconds
+                let attempts = 0;
+                const maxAttempts = 50;
+                const checkInterval = setInterval(() => {
+                    if (window.supabaseClient) {
+                        clearInterval(checkInterval);
+                        loadSubmissionData();
+                    } else if (++attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        console.error('Timed out waiting for Supabase client');
+                    }
+                }, 100);
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageModal();
+            }
+        });
+
+        // function togglePdfUpload() {
+        //     const statusSelect = document.getElementById('statusSelect');
+        //     const pdfUploadSection = document.getElementById('pdfUploadSection');
+            
+        //     if (statusSelect.value === 'approved') {
+        //         pdfUploadSection.classList.remove('hidden');
+        //     } else {
+        //         pdfUploadSection.classList.add('hidden');
+        //     }
+        // }
+
+        // function handlePdfUpload(input) {
+        //     const file = input.files[0];
+        //     const fileName = document.getElementById('pdfFileName');
+            
+        //     if (file) {
+        //         fileName.textContent = `Selected: ${file.name}`;
+        //         fileName.classList.remove('hidden');
+        //     }
+        // }
+
+        function downloadReport() {
+            const pdfReportSection = document.getElementById('pdfReportSection');
+            const reportUrl = pdfReportSection.getAttribute('data-report-url');
+            
+            if (reportUrl && reportUrl.trim() && !reportUrl.includes('example.com') && !reportUrl.includes('dummy.pdf')) {
+                console.log('Opening report URL:', reportUrl);
+                // Open the report URL in a new tab
+                window.open(reportUrl, '_blank');
+            } else {
+                console.error('No valid report URL available for download');
+                
+                // Try to fetch the latest report URL from the database
+                const submissionId = getSubmissionId();
+                if (submissionId) {
+                    console.log('Attempting to fetch latest report URL from database...');
+                    window.supabaseClient
+                        .from('authentication_requests')
+                        .select('report_url')
+                        .eq('id', submissionId)
+                        .single()
+                        .then(({ data, error }) => {
+                            if (error) {
+                                console.error('Error fetching report URL:', error);
+                                alert('PDF report is not available for download.');
+                            } else if (data && data.report_url && 
+                                       !data.report_url.includes('example.com') && 
+                                       !data.report_url.includes('dummy.pdf')) {
+                                console.log('Found valid report URL in database:', data.report_url);
+                                // Store the URL for future use
+                                pdfReportSection.setAttribute('data-report-url', data.report_url);
+                                // Open the report URL
+                                window.open(data.report_url, '_blank');
+                            } else {
+                                console.error('No valid report URL found in database');
+                                alert('PDF report is not available for download.');
+                            }
+                        });
+                } else {
+                    alert('PDF report is not available for download.');
+                }
+            }
+        }
+
+        // Submit the review
+        async function submitReview() {
+            const statusSelect = document.getElementById('statusSelect');
+            const status = statusSelect.value;
+            const statusText = statusSelect.options[statusSelect.selectedIndex].text;
+            const notes = document.getElementById('reviewNotes').value;
+            
+            console.log('Selected status value:', status);
+            console.log('Selected status text:', statusText);
+            console.log('Status select element:', document.getElementById('statusSelect').outerHTML);
+            
+            if (!status) {
+                alert('Please select a status');
+                return;
+            }
+            
+            // Get admin email asynchronously
+            const adminEmail = await getCurrentAdminEmail();
+            
+            // Prepare the report data
+            const reportData = {
+                id: getSubmissionId(), // Use getSubmissionId() to get the current submission ID
+                admin_note: notes,
+                status: status,
+                status_text: statusText, // Add the status text for clarity
+                handled_by: adminEmail,
+                updated_at: new Date().toISOString()
+            };
+            
+            console.log('Report data prepared:', reportData);
+            
+            // Show loading state
+            const submitButton = document.querySelector('button[onclick="submitReview()"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+            `;
+            submitButton.disabled = true;
+            
+            // Process the review
+            processReview(reportData)
+                .then(result => {
+                    console.log('Review processed successfully:', result);
+                    showToast(result.message || 'Review submitted successfully!');
+                    
+                    // Reset button
+                    submitButton.innerHTML = originalButtonText;
+                    submitButton.disabled = false;
+                    
+                    // Redirect after a delay
+                    setTimeout(() => {
+                        window.location.href = 'admin-submissions.html';
+                    }, 2000);
+                })
+                .catch(error => {
+                    console.error('Error processing review:', error);
+                    alert('Error: ' + (error.message || 'Failed to process review'));
+                    
+                    // Reset button
+                    submitButton.innerHTML = originalButtonText;
+                    submitButton.disabled = false;
+                });
+        }
+        
+        // Get current admin email from Supabase
+        async function getCurrentAdminEmail() {
+            try {
+                const { data: sessionData } = await window.supabaseClient.auth.getSession();
+                
+                if (!sessionData || !sessionData.session) {
+                    console.error('No active session found');
+                    return 'admin@example.com'; // Fallback
+                }
+                
+                const currentUserId = sessionData.session.user.id;
+                
+                // Get admin user's email from profiles table
+                const { data: profileData, error: profileError } = await window.supabaseClient
+                    .from('profiles')
+                    .select('email, is_admin')
+                    .eq('id', currentUserId)
+                    .single();
+                
+                if (profileError || !profileData || !profileData.is_admin) {
+                    console.error('User is not authorized as admin');
+                    return 'admin@example.com'; // Fallback
+                }
+                
+                return profileData.email || 'admin@example.com';
+            } catch (error) {
+                console.error('Error getting admin email:', error);
+                return 'admin@example.com'; // Fallback
+            }
+        }
+        
+        // Process the review submission
+        async function processReview(reportData) {
+            try {
+                // 1. Get full submission details
+                const { data: submission, error: submissionError } = await window.supabaseClient
+                    .from('authentication_requests')
+                    .select('*, profiles(full_name, email)')
+                    .eq('id', reportData.id)
+                    .single();
+                
+                if (submissionError) throw submissionError;
+                if (!submission) throw new Error('Submission not found');
+                
+                // Merge submission data with report data
+                const fullReportData = {
+                    ...reportData,
+                    full_name: submission.profiles?.full_name || submission.user_email,
+                    email: submission.profiles?.email || submission.user_email,
+                    model_name: submission.model_name,
+                    human_readable_id: submission.human_readable_id,
+                    created_at: submission.created_at,
+                    photo_urls: submission.photo_urls
+                };
+                
+                // 2. Handle based on status
+                console.log('Processing review with status:', reportData.status, 'status_text:', reportData.status_text);
+                
+                if (reportData.status === 'authenticated') {
+                    try {
+                        console.log('Generating PDF for status:', reportData.status);
+                        console.log('Submission ID being processed:', reportData.id);
+                        // For authenticated status, generate PDF and update with URL
+                        const pdfUrl = await generateAndUploadPdf(fullReportData);
+                        
+                        if (!pdfUrl || typeof pdfUrl !== 'string' || pdfUrl.trim() === '') {
+                            throw new Error('Invalid PDF URL returned from generateAndUploadPdf');
+                        }
+                        
+                        if (pdfUrl.includes('example.com/dummy.pdf')) {
+                            throw new Error('Received dummy URL instead of actual storage URL');
+                        }
+                        
+                        console.log('Generated PDF URL:', pdfUrl);
+                        console.log('PDF URL type:', typeof pdfUrl);
+                        console.log('PDF URL length:', pdfUrl.length);
+                        
+                        // Update submission with status and PDF URL
+                        console.log('Updating database with URL:', pdfUrl);
+                        const updatePayload = {
+                            status: 'Authenticated', // Make sure to use the correct case
+                            admin_notes: reportData.admin_note,
+                            report_url: pdfUrl,
+                            updated_at: reportData.updated_at,
+                            handled_by: reportData.handled_by
+                        };
+                        console.log('Update payload:', JSON.stringify(updatePayload));
+                        
+                        // Use RPC call to ensure atomic update
+                        const { data: updateData, error: updateError } = await window.supabaseClient
+                            .from('authentication_requests')
+                            .update(updatePayload)
+                            .eq('id', reportData.id)
+                            .select();
+                        
+                        if (updateError) {
+                            console.error('Error updating with PDF URL:', updateError);
+                            throw updateError;
+                        }
+                        
+                        // Verify the update was successful
+                        if (!updateData || updateData.length === 0) {
+                            console.error('Update succeeded but no data returned');
+                        } else {
+                            console.log('Updated record:', updateData[0]);
+                            
+                            // Double-check that the report_url was actually updated
+                            if (updateData[0].report_url !== pdfUrl) {
+                                console.error('Report URL mismatch after update!');
+                                console.error('Expected:', pdfUrl);
+                                console.error('Actual:', updateData[0].report_url);
+                                
+                                // If the URL is still the dummy URL or null, try to update it again
+                                if (!updateData[0].report_url || 
+                                    updateData[0].report_url.includes('example.com') || 
+                                    updateData[0].report_url.includes('dummy.pdf')) {
+                                    
+                                    console.log('Attempting to fix incorrect report_url with a second update...');
+                                    
+                                    // Make a second attempt to update just the report_url field
+                                    const { error: secondUpdateError } = await window.supabaseClient
+                                        .from('authentication_requests')
+                                        .update({ report_url: pdfUrl })
+                                        .eq('id', reportData.id);
+                                    
+                                    if (secondUpdateError) {
+                                        console.error('Second update attempt failed:', secondUpdateError);
+                                    } else {
+                                        console.log('Second update attempt succeeded, report_url should now be fixed');
+                                    }
+                                }
+                            }
+                        }
+                        
+                        console.log('Database updated successfully with URL:', pdfUrl);
+                        
+                        // Verify that the URL was actually saved in the database
+                        setTimeout(async () => {
+                            try {
+                                // Query the database to check if the report_url was saved correctly
+                                const { data: verifyData, error: verifyError } = await window.supabaseClient
+                                    .from('authentication_requests')
+                                    .select('report_url')
+                                    .eq('id', reportData.id)
+                                    .single();
+                                
+                                if (verifyError) {
+                                    console.error('Error verifying report_url:', verifyError);
+                                } else if (!verifyData || !verifyData.report_url) {
+                                    console.error('Verification failed: report_url is missing in the database');
+                                    
+                                    // Try one more update as a final attempt
+                                    console.log('Making final attempt to update report_url...');
+                                    const { error: finalUpdateError } = await window.supabaseClient
+                                        .from('authentication_requests')
+                                        .update({ report_url: pdfUrl })
+                                        .eq('id', reportData.id);
+                                    
+                                    if (finalUpdateError) {
+                                        console.error('Final update attempt failed:', finalUpdateError);
+                                    } else {
+                                        console.log('Final update attempt completed');
+                                    }
+                                } else if (verifyData.report_url !== pdfUrl) {
+                                    console.error('Verification warning: report_url in database does not match expected value');
+                                    console.error('Expected:', pdfUrl);
+                                    console.error('Actual:', verifyData.report_url);
+                                } else {
+                                    console.log('Verification successful: report_url is correctly saved in database');
+                                }
+                            } catch (verifyError) {
+                                console.error('Error during verification:', verifyError);
+                            }
+                        }, 1000); // Wait 1 second before verifying to allow any async operations to complete
+                        
+                        return { success: true, message: 'PDF report created and uploaded successfully' };
+                    } catch (pdfError) {
+                        console.error('PDF generation error:', pdfError);
+                        
+                        // If PDF generation fails, update the status but DO NOT set report_url
+                        // This ensures we don't overwrite with null or leave a dummy URL
+                        const { error: updateError } = await window.supabaseClient
+                            .from('authentication_requests')
+                            .update({
+                                status: 'Authenticated',
+                                admin_notes: reportData.admin_note + '\n\nNote: PDF report generation failed: ' + pdfError.message,
+                                updated_at: reportData.updated_at,
+                                handled_by: reportData.handled_by,
+                                // Explicitly set report_url to null rather than leaving it as is
+                                // This ensures we don't keep any dummy URLs
+                                report_url: null
+                            })
+                            .eq('id', reportData.id);
+                        
+                        if (updateError) {
+                            console.error('Error updating submission after PDF failure:', updateError);
+                            throw new Error('Failed to update submission status: ' + updateError.message);
+                        }
+                        
+                        throw new Error('Submission was authenticated, but PDF report generation failed: ' + pdfError.message);
+                    }
+                } else {
+                    // For other statuses, just update the status
+                    const { error: updateError } = await window.supabaseClient
+                        .from('authentication_requests')
+                        .update({
+                            status: reportData.status === 'rejected' ? 'Rejected' : 
+                                   reportData.status === 'action_required' ? 'Action Required' : 
+                                   reportData.status === 'pending_review' ? 'Pending Review' : reportData.status,
+                            admin_notes: reportData.admin_note,
+                            updated_at: reportData.updated_at,
+                            handled_by: reportData.handled_by
+                        })
+                        .eq('id', reportData.id);
+                    
+                    if (updateError) throw updateError;
+                    
+                    return { success: true, message: 'Review submitted successfully' };
+                }
+            } catch (error) {
+                console.error('Error in processReview:', error);
+                throw error;
+            }
+        }
+        
+        // Check if current user is the admin
+        async function isAdminUser() {
+            try {
+                const { data: sessionData } = await window.supabaseClient.auth.getSession();
+                
+                if (!sessionData || !sessionData.session) {
+                    console.error('No active session found');
+                    return false;
+                }
+                
+                const currentUserId = sessionData.session.user.id;
+                
+                // Check if user is admin by querying the profiles table
+                const { data: profileData, error: profileError } = await window.supabaseClient
+                    .from('profiles')
+                    .select('is_admin')
+                    .eq('id', currentUserId)
+                    .single();
+                
+                if (profileError) {
+                    console.error('Error checking admin status:', profileError);
+                    return false;
+                }
+                
+                console.log('Current user ID:', currentUserId);
+                console.log('Is admin:', profileData?.is_admin);
+                
+                return profileData?.is_admin || false;
+            } catch (error) {
+                console.error('Error checking admin status:', error);
+                return false;
+            }
+        }
+
+        // Create a Supabase client with service role for admin operations
+        function createServiceRoleClient() {
+            // Note: This should be used carefully and only in admin contexts
+            // The service role key should be stored securely and not exposed to clients
+            // Ideally, this operation should be performed on the server side
+            
+            // This is a placeholder for server-side implementation
+            // In a production environment, this should be a server API call
+            console.log('Creating service role client for admin operations');
+            
+            // For demonstration purposes only
+            // In production, make an API call to your server that uses the service role key
+            return window.supabaseClient;
+        }
+
+        // Generate PDF and upload to Supabase
+        async function generateAndUploadPdf(reportData) {
+            try {
+                // Generate a PDF
+                const pdfBlob = await generatePdf(reportData);
+                
+                // Get the current session to ensure we have authentication headers
+                const { data: sessionData } = await window.supabaseClient.auth.getSession();
+                
+                if (!sessionData || !sessionData.session) {
+                    throw new Error('No active session found. Please log in again.');
+                }
+                
+                console.log('Using authenticated session for user:', sessionData.session.user.id);
+                
+                // Create form data for the file upload
+                const formData = new FormData();
+                formData.append('pdfFile', pdfBlob, `report-${reportData.id}.pdf`);
+                formData.append('submissionId', reportData.id);
+                
+                // Use the server endpoint to handle the upload with service role
+                const response = await fetch('/api/admin/upload-pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${sessionData.session.access_token}`
+                    },
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Server upload error:', errorData);
+                    throw new Error(errorData.error || 'Failed to upload PDF through server');
+                }
+                
+                const result = await response.json();
+                console.log('Server upload successful:', result);
+                
+                // Make sure we're returning the URL from the server response
+                if (!result.url) {
+                    console.error('Server response missing URL:', result);
+                    throw new Error('Server response missing URL');
+                }
+                
+                // Validate the URL to ensure it's not the dummy URL
+                if (result.url.includes('example.com') || result.url.includes('dummy.pdf')) {
+                    console.error('Server returned invalid URL:', result.url);
+                    throw new Error('Server returned invalid URL instead of actual storage URL');
+                }
+                
+                // Ensure the URL is a valid Supabase Storage URL
+                if (!result.url.includes('storage.googleapis.com') && 
+                    !result.url.includes('supabase.co') && 
+                    !result.url.startsWith('https://')) {
+                    console.error('Server returned suspicious URL:', result.url);
+                    throw new Error('Server returned suspicious URL that does not appear to be a valid storage URL');
+                }
+                
+                console.log('Using PDF URL from server:', result.url);
+                
+                // Directly update the report_url in the database to ensure it's saved correctly
+                const updateResult = await updateReportUrl(reportData.id, result.url);
+                if (!updateResult.success) {
+                    console.warn('Direct update of report_url failed:', updateResult.error);
+                    // Continue anyway, as we'll return the URL and let processReview handle the update
+                } else {
+                    console.log('Direct update of report_url succeeded');
+                }
+                
+                return result.url;
+            } catch (error) {
+                console.error('Error generating and uploading PDF:', error);
+                throw new Error('Failed to generate and upload PDF: ' + error.message);
+            }
+        }
+        
+        // Generate PDF using jsPDF
+        async function generatePdf(reportData) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    // Initialize jsPDF
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    
+                    // Set document properties
+                    doc.setProperties({
+                        title: `Authentication Report - ${reportData.human_readable_id || reportData.id}`,
+                        subject: 'Authentication Report',
+                        author: reportData.handled_by,
+                        creator: 'Vrai Authentication System'
+                    });
+                    
+                    // Add title - ADJUSTED Y POSITION TO START HIGHER
+                    doc.setFontSize(20);
+                    doc.text('Authentication Report', 105, 30, { align: 'center' });
+                    
+                    // Add report content
+                    doc.setFontSize(12);
+                    doc.text('We have reviewed the photographs of the handbag you provided, including the front and stamp images shown below. Based on our assessment of these images, we are of the opinion that the item depicted is an authentic Hermès piece.', 20, 40, { maxWidth: 170 });
+                    
+                    // Add submission details
+                    doc.setFontSize(14);
+                    doc.text('Submission Details', 105, 80, { align: 'center' });
+                    
+                    doc.setFontSize(11);
+                    const details = [
+                        ['From', 'Vrai Company'],
+                        ['Customer Name', reportData.full_name || 'N/A'],
+                        ['Customer Email', reportData.email || 'N/A'],
+                        ['Submission ID', reportData.human_readable_id || reportData.id],
+                        ['Brand / Model', `Hermès / ${reportData.model_name || 'N/A'}`],
+                        ['Approved Date', new Date().toLocaleDateString()],
+                    ];
+                    
+                    // Add details table - CENTERED WITH PADDING
+                    doc.autoTable({
+                        startY: 85,
+                        head: [['Field', 'Value']],
+                        body: details,
+                        theme: 'striped',
+                        headStyles: { fillColor: [0, 123, 255] },
+                        margin: { left: 40, right: 40 }, // Add horizontal padding
+                        styles: {
+                            overflow: 'linebreak',
+                            cellWidth: 'auto'
+                        }
+                    });
+                    
+                    // Add admin notes if available
+                    if (reportData.admin_note) {
+                        const finalY = doc.previousAutoTable.finalY + 10;
+                        doc.setFontSize(14);
+                        doc.text('Authentication Notes', 105, finalY, { align: 'center' });
+                        doc.setFontSize(11);
+                        doc.text(reportData.admin_note, 20, finalY + 10, { maxWidth: 170 });
+                    }
+                    
+                    // IMPROVED IMAGE RENDERING - Fetch and display actual images
+                    if (reportData.photo_urls && Array.isArray(reportData.photo_urls) && reportData.photo_urls.length > 0) {
+                        const imagesY = doc.previousAutoTable ? doc.previousAutoTable.finalY + 20 : 120;
+                        doc.setFontSize(14);
+                        doc.text('Uploaded Images', 105, imagesY, { align: 'center' });
+                        
+                        // Calculate image positioning
+                        const imageSize = 60; // Increased to 60x60
+                        const margin = 10;
+                        const pageWidth = doc.internal.pageSize.width;
+                        const imagesPerRow = Math.floor((pageWidth - 40) / (imageSize + margin));
+                        let currentX = 20;
+                        let currentY = imagesY + 10;
+                        let imageIndex = 0;
+                        
+                        // Helper function to fetch and convert image to base64
+                        const getImageAsBase64 = async (url) => {
+                          try {
+                            const controller = new AbortController();
+                            const timeout = setTimeout(() => controller.abort(), 5000);
+                            const response = await fetch(url, { mode: 'cors', credentials: 'omit', signal: controller.signal });
+                            clearTimeout(timeout);
+
+                            if (!response.ok) {
+                              console.error('Image fetch failed:', response.status, url);
+                              return null;
+                            }
+
+                            const blob = await response.blob();
+                            return await new Promise((resolve, reject) => {
+                              const reader = new FileReader();
+                              reader.onloadend = () => resolve(reader.result);
+                              reader.onerror = reject;
+                              reader.readAsDataURL(blob);
+                            });
+                          } catch (error) {
+                            console.error('Image fetch error:', url, error);
+                            return null;
+                          }
+                        };
+                        
+                        // Process each image
+                        for (let i = 0; i < reportData.photo_urls.length; i++) {
+                            const imageUrl = reportData.photo_urls[i];
+                            console.log(`Fetching image ${i + 1}:`, imageUrl);
+                            
+                            // Check if we need a new row
+                            if (imageIndex > 0 && imageIndex % imagesPerRow === 0) {
+                                currentX = 20;
+                                currentY += imageSize + margin + 15; // Added space for label
+                            }
+                            
+                            // Check if we need a new page
+                            if (currentY + imageSize + 15 > doc.internal.pageSize.height - 30) {
+                                doc.addPage();
+                                currentY = 20;
+                                currentX = 20;
+                                imageIndex = 0;
+                            }
+                            
+                            try {
+                                // Try to fetch and add the actual image
+                                const base64Image = await getImageAsBase64(imageUrl);
+                                
+                                if (base64Image) {
+                                    // Add the actual image
+                                    doc.addImage(base64Image, 'JPEG', currentX, currentY, imageSize, imageSize);
+                                } else {
+                                    // Fallback to placeholder if image can't be loaded
+                                    doc.setDrawColor(200, 200, 200);
+                                    doc.setFillColor(240, 240, 240);
+                                    doc.rect(currentX, currentY, imageSize, imageSize, 'F');
+                                    
+                                    doc.setFontSize(8);
+                                    doc.setTextColor(100, 100, 100);
+                                    doc.text(`Image ${i + 1}`, currentX + imageSize/2, currentY + imageSize/2, { align: 'center' });
+                                }
+                                
+                                // Add label below image
+                                doc.setFontSize(8);
+                                doc.setTextColor(0, 0, 0);
+                                doc.text(`Image ${i + 1}`, currentX + imageSize/2, currentY + imageSize + 8, { align: 'center' });
+                                
+                                currentX += imageSize + margin;
+                                imageIndex++;
+                            } catch (imgError) {
+                                console.error(`Error processing image ${i + 1}:`, imgError);
+                                // Add placeholder on error
+                                doc.setDrawColor(200, 200, 200);
+                                doc.setFillColor(240, 240, 240);
+                                doc.rect(currentX, currentY, imageSize, imageSize, 'F');
+                                
+                                doc.setFontSize(8);
+                                doc.setTextColor(100, 100, 100);
+                                doc.text(`Image ${i + 1}`, currentX + imageSize/2, currentY + imageSize/2, { align: 'center' });
+                                
+                                // Add label below image
+                                doc.setFontSize(8);
+                                doc.setTextColor(0, 0, 0);
+                                doc.text(`Image ${i + 1}`, currentX + imageSize/2, currentY + imageSize + 8, { align: 'center' });
+                                
+                                currentX += imageSize + margin;
+                                imageIndex++;
+                            }
+                        }
+                    }
+                    
+                    // Add disclaimer on a new page
+                    doc.addPage();
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Disclaimer:', 20, 20);
+                    
+                    doc.setFontSize(11);
+                    doc.setFont(undefined, 'normal');
+                    doc.text('Please note that this opinion is based solely on the images submitted and does not constitute a definitive authentication. A physical inspection may be required for a conclusive evaluation.', 20, 35, { maxWidth: 170 });
+                    
+                    // Add footer to all pages
+                    const pageCount = doc.internal.getNumberOfPages();
+                    for (let i = 1; i <= pageCount; i++) {
+                        doc.setPage(i);
+                        doc.setFontSize(8);
+                        doc.setTextColor(100, 100, 100);
+                        doc.text(
+                            `Authentication Report - ${reportData.human_readable_id || reportData.id} - Page ${i} of ${pageCount}`,
+                            105, 
+                            doc.internal.pageSize.height - 10, 
+                            { align: 'center' }
+                        );
+                    }
+                    
+                    // Convert to blob
+                    const pdfBlob = doc.output('blob');
+                    resolve(pdfBlob);
+                    
+                } catch (error) {
+                    console.error('Error generating PDF:', error);
+                    reject(new Error('Failed to generate PDF: ' + error.message));
+                }
+            });
+        }
+        
+        // Show toast with custom message
+        function showToast(message = 'Review submitted successfully!') {
+            const toast = document.getElementById('successToast');
+            const toastMessage = toast.querySelector('span.text-sm');
+            if (toastMessage) {
+                toastMessage.textContent = message;
+            }
+            toast.classList.remove('hidden');
+            
+            // Auto-dismiss after 3 seconds
+            setTimeout(() => {
+                closeToast();
+            }, 3000);
+        }
+
+        function closeToast() {
+            const toast = document.getElementById('successToast');
+            toast.classList.add('hidden');
+        }
+    </script>
+
+    <!-- Authentication Check -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-init.js"></script>
+    <script src="supabase-auth.js"></script>
+</body>
+</html> 

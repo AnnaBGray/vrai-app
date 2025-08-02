@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Activity - Vrai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-init.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#89CFF0',
+                        'primary-dark': '#7ab8d9',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Playfair Display', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-[#EAF6FC] font-sans text-[#1A1A1A] antialiased">
+    <div class="w-full max-w-md mx-auto pb-20">
+        <!-- Header -->
+        <div class="px-4 pt-8 pb-6">
+            <div class="flex items-center mb-2">
+                <button onclick="window.location.href='profile-settings.html'" class="flex items-center justify-center w-10 h-10 rounded-lg  mr-3">
+                    <svg class="w-6 h-6 text-gray-600" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h1 class="font-display text-2xl font-semibold text-gray-900">Login Activity</h1>
+            </div>
+            <p class="text-gray-600 text-sm ml-13">Recent sign-in records for your account</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="px-4 text-center py-16">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-4"></div>
+            <p class="text-gray-500">Loading login activity...</p>
+        </div>
+
+        <!-- Login Activity List -->
+        <div id="activityList" class="px-4 space-y-4 hidden">
+            <!-- Activity items will be dynamically inserted here -->
+        </div>
+        
+        <!-- Empty State -->
+        <div id="emptyState" class="px-4 text-center py-16 hidden">
+            <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" viewBox="0 0 24 24" fill="none">
+                <path d="M3 5H21V19H3V5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M3 8H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M6 11H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h3 class="font-display text-lg font-semibold text-gray-700">No login activity yet.</h3>
+            <p class="text-gray-500">We'll keep track of your sign-ins here.</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="px-4 text-center py-16 hidden">
+            <svg class="w-16 h-16 mx-auto text-red-300 mb-4" viewBox="0 0 24 24" fill="none">
+                <path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h3 class="font-display text-lg font-semibold text-gray-700">Unable to load login activity</h3>
+            <p class="text-gray-500">Please try refreshing the page.</p>
+            <button onclick="location.reload()" class="mt-4 bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors">
+                Refresh Page
+            </button>
+        </div>
+
+        <!-- Reminder -->
+        <div class="px-4 pt-8 text-center">
+            <p class="text-sm text-gray-600 bg-white/70 p-3 rounded-lg">
+                If you notice any unfamiliar activity, consider <a href="change-password.html" class="font-medium text-primary-500 underline">changing your password</a>.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Use the shared Supabase client from supabase-init.js
+        const supabase = window.supabaseClient;
+        
+        // IP Info API token
+        const IPINFO_TOKEN = 'eeba6ab611395d';
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🔄 Initializing login activity page...');
+            
+            try {
+                // Check if user is authenticated
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                
+                if (authError || !user) {
+                    console.error('❌ Authentication error:', authError);
+                    alert('You must be logged in to view login activity.');
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                console.log('✅ User authenticated:', user.id);
+                
+                // Track this page visit as a login activity
+                await trackLoginActivity(user.id);
+                
+                // Load and display login activity
+                await loadLoginActivity();
+                
+            } catch (error) {
+                console.error('❌ Unexpected error:', error);
+                showErrorState();
+            }
+        });
+        
+        /**
+         * Track a new login activity
+         * @param {string} userId - The user's ID
+         */
+        async function trackLoginActivity(userId) {
+            try {
+                console.log('📊 Tracking login activity for user:', userId);
+                
+                // Get user's IP address
+                const ipResponse = await fetch(`https://ipinfo.io/json?token=${IPINFO_TOKEN}`);
+                if (!ipResponse.ok) {
+                    throw new Error('Failed to fetch IP address');
+                }
+                const ipData = await ipResponse.json();
+                const ipAddress = ipData.ip || 'Unknown';
+                
+                console.log('📍 IP Address:', ipAddress);
+                
+                // Get browser user agent
+                const userAgent = navigator.userAgent;
+                console.log('🌐 User Agent:', userAgent);
+                
+                // Check for duplicate records before inserting
+                const shouldInsert = await checkForDuplicateRecord(userId, ipAddress, userAgent);
+                
+                if (shouldInsert) {
+                    // Insert new record into login_activity table
+                    const { error } = await supabase
+                        .from('login_activity')
+                        .insert({
+                            user_id: userId,
+                            ip_address: ipAddress,
+                            user_agent: userAgent,
+                            status: 'success'
+                        });
+                    
+                    if (error) {
+                        console.error('❌ Failed to insert login activity:', error);
+                        // Don't throw error here as we still want to show the page
+                    } else {
+                        console.log('✅ Login activity tracked successfully');
+                    }
+                } else {
+                    console.log('⏭️ Skipping duplicate login activity record');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error tracking login activity:', error);
+                // Don't throw error here as we still want to show the page
+            }
+        }
+        
+        /**
+         * Check if the current session matches the most recent record to avoid duplicates
+         * @param {string} userId - The user's ID
+         * @param {string} ipAddress - Current IP address
+         * @param {string} userAgent - Current user agent
+         * @returns {boolean} - True if should insert, false if duplicate
+         */
+        async function checkForDuplicateRecord(userId, ipAddress, userAgent) {
+            try {
+                // Get the most recent record for this user
+                const { data: recentRecord, error } = await supabase
+                    .from('login_activity')
+                    .select('ip_address, user_agent, created_at')
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+                
+                if (error) {
+                    if (error.code === 'PGRST116') {
+                        // No records found, safe to insert
+                        console.log('📝 No previous records found, inserting new record');
+                        return true;
+                    }
+                    console.error('❌ Error checking for duplicate record:', error);
+                    return true; // Insert anyway if we can't check
+                }
+                
+                if (!recentRecord) {
+                    console.log('📝 No previous records found, inserting new record');
+                    return true;
+                }
+                
+                // Compare IP address
+                const ipMatches = recentRecord.ip_address === ipAddress;
+                
+                // Compare user agent
+                const userAgentMatches = recentRecord.user_agent === userAgent;
+                
+                // Compare calendar day (same date)
+                const recentDate = new Date(recentRecord.created_at);
+                const currentDate = new Date();
+                const sameDay = recentDate.toDateString() === currentDate.toDateString();
+                
+                console.log('🔍 Duplicate check results:', {
+                    ipMatches,
+                    userAgentMatches,
+                    sameDay,
+                    recentIP: recentRecord.ip_address,
+                    currentIP: ipAddress,
+                    recentUserAgent: recentRecord.user_agent.substring(0, 50) + '...',
+                    currentUserAgent: userAgent.substring(0, 50) + '...'
+                });
+                
+                // Only insert if any of the three conditions are different
+                const shouldInsert = !ipMatches || !userAgentMatches || !sameDay;
+                
+                if (!shouldInsert) {
+                    console.log('⏭️ Duplicate detected - same IP, user agent, and day');
+                } else {
+                    console.log('✅ New session detected - inserting record');
+                }
+                
+                return shouldInsert;
+                
+            } catch (error) {
+                console.error('❌ Error in duplicate check:', error);
+                return true; // Insert anyway if we can't check
+            }
+        }
+        
+        /**
+         * Load and display login activity
+         */
+        async function loadLoginActivity() {
+            try {
+                console.log('📊 Loading login activity...');
+                
+                // Get current user
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                if (userError || !user) {
+                    console.error('❌ Error getting user:', userError);
+                    showError('Failed to load user data');
+                    return;
+                }
+                
+                console.log('👤 User ID:', user.id);
+                
+                // Fetch login activity from Supabase
+                const { data: activities, error } = await supabase
+                    .from('login_activity')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    console.error('❌ Error fetching login activity:', error);
+                    showError('Failed to load login activity');
+                    return;
+                }
+                
+                console.log('📋 Raw activities:', activities);
+                
+                if (!activities || activities.length === 0) {
+                    showNoActivity();
+                    return;
+                }
+                
+                // Filter and process activities
+                const filteredActivities = filterAndProcessActivities(activities, user.id);
+                
+                console.log('✅ Filtered activities:', filteredActivities);
+                
+                if (filteredActivities.length === 0) {
+                    showNoActivity();
+                    return;
+                }
+                
+                // Display filtered activities
+                displayActivities(filteredActivities);
+                
+            } catch (error) {
+                console.error('❌ Error in loadLoginActivity:', error);
+                showError('Failed to load login activity');
+            }
+        }
+        
+        /**
+         * Filter and process activities to show only relevant entries
+         * @param {Array} activities - Raw activities from database
+         * @param {string} userId - Current user ID
+         * @returns {Array} - Filtered and processed activities
+         */
+        function filterAndProcessActivities(activities, userId) {
+            const relevantActivities = [];
+            const seenCombinations = new Set();
+            
+            for (const activity of activities) {
+                const key = `${activity.ip_address}-${activity.user_agent}-${new Date(activity.created_at).toDateString()}`;
+                
+                // Only include activities with status "This device" or "Log out"
+                if (activity.status === 'This device' || activity.status === 'Log out') {
+                    // Check if we've already seen this combination (IP + user agent + date)
+                    if (!seenCombinations.has(key)) {
+                        relevantActivities.push(activity);
+                        seenCombinations.add(key);
+                    } else {
+                        console.log('⏭️ Skipping duplicate:', key);
+                    }
+                } else {
+                    console.log('⏭️ Skipping non-relevant status:', activity.status);
+                }
+            }
+            
+            return relevantActivities;
+        }
+        
+        /**
+         * Display login activity in the UI
+         * @param {Array} activities - Array of login activity records
+         */
+        function displayActivities(activities) {
+            const activityList = document.getElementById('activityList');
+            const loadingState = document.getElementById('loadingState');
+            
+            // Hide loading state
+            loadingState.classList.add('hidden');
+            
+            // Clear existing content
+            activityList.innerHTML = '';
+            
+            // Add each activity
+            activities.forEach((activity, index) => {
+                const activityElement = createActivityElement(activity, index === 0);
+                activityList.appendChild(activityElement);
+            });
+            
+            // Show activity list
+                activityList.classList.remove('hidden');
+        }
+        
+        /**
+         * Create an HTML element for a login activity
+         * @param {Object} activity - The login activity record
+         * @param {boolean} isCurrent - Whether this is the current session
+         * @returns {HTMLElement} - The activity element
+         */
+        function createActivityElement(activity, isCurrent) {
+            const div = document.createElement('div');
+            div.className = `bg-white rounded-xl shadow-sm p-4 ${isCurrent ? 'border border-primary-500/50' : ''}`;
+            
+            // Parse user agent to get browser and OS info
+            const browserInfo = parseUserAgent(activity.user_agent);
+            const formattedDate = formatDate(activity.created_at);
+            
+            // Determine status display
+            let statusDisplay = '';
+            let statusColor = '';
+            
+            if (activity.status === 'This device') {
+                statusDisplay = 'This device';
+                statusColor = 'bg-green-100 text-green-800';
+            } else if (activity.status === 'Log out') {
+                statusDisplay = 'Log out';
+                statusColor = 'bg-red-100 text-red-800';
+            } else {
+                statusDisplay = activity.status;
+                statusColor = 'bg-gray-100 text-gray-800';
+            }
+            
+            div.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-6 h-6 ${activity.status === 'This device' ? 'text-green-500' : activity.status === 'Log out' ? 'text-red-500' : 'text-gray-500'}" viewBox="0 0 24 24" fill="none">
+                            ${activity.status === 'This device' 
+                                ? '<path d="M5 12.55L7.84 15.7L17.41 5.33002L16 4.00002L7.83 12.87L6.5 11.43L5 12.55Z" fill="currentColor"/>'
+                                : activity.status === 'Log out'
+                                ? '<path d="M16.97 7.97L7.97 16.97M16.97 16.97L7.97 7.97" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+                                : '<path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+                            }
+                        </svg>
+                        <div>
+                            <p class="font-medium text-gray-900">${browserInfo}</p>
+                            <p class="text-sm text-gray-500">${formattedDate}</p>
+                            <p class="text-sm text-gray-500">IP: ${activity.ip_address}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-block ${statusColor} text-xs font-medium px-2 py-1 rounded-full">${statusDisplay}</span>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+        
+        /**
+         * Parse user agent string to get browser and OS information
+         * @param {string} userAgent - The user agent string
+         * @returns {string} - Formatted browser and OS info
+         */
+        function parseUserAgent(userAgent) {
+            // Simple parsing - in a real app you might use a library like ua-parser-js
+            let browser = 'Unknown Browser';
+            let os = 'Unknown OS';
+            
+            if (userAgent.includes('Chrome')) browser = 'Chrome';
+            else if (userAgent.includes('Firefox')) browser = 'Firefox';
+            else if (userAgent.includes('Safari')) browser = 'Safari';
+            else if (userAgent.includes('Edge')) browser = 'Edge';
+            
+            if (userAgent.includes('Windows')) os = 'Windows';
+            else if (userAgent.includes('Mac')) os = 'macOS';
+            else if (userAgent.includes('Linux')) os = 'Linux';
+            else if (userAgent.includes('Android')) os = 'Android';
+            else if (userAgent.includes('iOS')) os = 'iOS';
+            
+            return `${browser} · ${os}`;
+        }
+        
+        /**
+         * Format date for display
+         * @param {string} dateString - ISO date string
+         * @returns {string} - Formatted date string
+         */
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInHours = (now - date) / (1000 * 60 * 60);
+            
+            if (diffInHours < 1) {
+                return 'Just now';
+            } else if (diffInHours < 24) {
+                const hours = Math.floor(diffInHours);
+                return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            } else {
+                return date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+        }
+        
+        /**
+         * Show error message
+         * @param {string} message - Error message to display
+         */
+        function showError(message) {
+            const activityList = document.getElementById('activityList');
+            const loadingState = document.getElementById('loadingState');
+            
+            // Hide loading state
+            loadingState.classList.add('hidden');
+            
+            // Show error state
+            activityList.innerHTML = `
+                <div class="text-center py-8">
+                    <svg class="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Error loading activity</h3>
+                    <p class="mt-1 text-sm text-gray-500">${message}</p>
+                </div>
+            `;
+            
+            activityList.classList.remove('hidden');
+        }
+        
+        /**
+         * Show no activity state when no relevant activity is found
+         */
+        function showNoActivity() {
+            const activityList = document.getElementById('activityList');
+            const loadingState = document.getElementById('loadingState');
+            
+            // Hide loading state
+            loadingState.classList.add('hidden');
+            
+            // Show no activity state
+            activityList.innerHTML = `
+                <div class="text-center py-8">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No relevant login activity</h3>
+                    <p class="mt-1 text-sm text-gray-500">Only current device and logged out sessions are shown here.</p>
+                </div>
+            `;
+            
+            activityList.classList.remove('hidden');
+        }
+        
+        /**
+         * Show empty state
+         */
+        function showEmptyState() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('activityList').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('emptyState').classList.remove('hidden');
+        }
+        
+        /**
+         * Show error state
+         */
+        function showErrorState() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('activityList').classList.add('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('errorState').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Support - Vrai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#89CFF0',
+                        'primary-dark': '#7ab8d9',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Playfair Display', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-[#EAF6FC] font-sans text-[#1A1A1A] antialiased">
+    <div class="w-full max-w-md mx-auto pb-20">
+        <!-- Header -->
+        <div class="px-4 pt-8 pb-6">
+            <div class="flex items-center mb-2">
+                <button onclick="window.location.href='settings.html'" class="flex items-center justify-center w-10 h-10 rounded-lg mr-3">
+                    <svg class="w-6 h-6 text-gray-600" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h1 class="font-display text-2xl font-semibold text-gray-900">Contact Support</h1>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="px-4">
+            <div class="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mb-2"></div>
+                <p class="text-gray-600">Loading messages...</p>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="px-4 hidden">
+            <div class="bg-white rounded-xl shadow-sm p-6 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No messages yet</h3>
+                <p class="mt-1 text-sm text-gray-500">Start a conversation with our support team.</p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="px-4 hidden">
+            <div class="bg-white rounded-xl shadow-sm p-6 text-center">
+                <svg class="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Error loading messages</h3>
+                <p class="mt-1 text-sm text-gray-500">Please try again later.</p>
+            </div>
+        </div>
+
+        <!-- Chat Content -->
+        <div id="chatContent" class="px-4 hidden">
+            <!-- Messages Container -->
+            <div id="messagesContainer" class="bg-white rounded-xl shadow-sm p-4 mb-4 overflow-y-auto max-h-[calc(100vh-280px)] space-y-4">
+                <!-- Messages will be inserted here dynamically -->
+            </div>
+        </div>
+
+        <!-- Message Input -->
+        <div id="messageInputContainer" class="px-4 fixed bottom-20 left-0 right-0 max-w-md mx-auto hidden">
+            <div class="bg-white rounded-xl shadow-sm p-3 flex items-center space-x-2">
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    placeholder="Type your message..." 
+                    class="flex-1 px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors text-gray-900"
+                >
+                <button 
+                    id="sendButton" 
+                    class="bg-primary text-gray-800 p-2 rounded-xl flex items-center justify-center"
+                    disabled
+                >
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                        <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-gray-100 py-3 px-4 shadow-sm z-50">
+        <div class="flex justify-around items-center">
+            <!-- Dashboard -->
+            <a href="#" id="dashboard-link" class="flex flex-col items-center justify-center text-xs font-medium text-gray-400">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 13H11V3H3V13ZM3 21H11V15H3V21ZM13 21H21V11H13V21ZM13 3V9H21V3H13Z" fill="currentColor"/>
+                </svg>
+                <span class="mt-1">Dashboard</span>
+            </a>
+            <!-- Authenticate -->
+            <a href="#" class="flex flex-col items-center justify-center text-xs font-medium text-gray-400">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 15.2C13.7673 15.2 15.2 13.7673 15.2 12C15.2 10.2327 13.7673 8.8 12 8.8C10.2327 8.8 8.8 10.2327 8.8 12C8.8 13.7673 10.2327 15.2 12 15.2ZM12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17ZM12 4.5C12.8284 4.5 13.5 3.82843 13.5 3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3C10.5 3.82843 11.1716 4.5 12 4.5ZM19 4.5C19.8284 4.5 20.5 3.82843 20.5 3C20.5 2.17157 19.8284 1.5 19 1.5C18.1716 1.5 17.5 2.17157 17.5 3C17.5 3.82843 18.1716 4.5 19 4.5ZM21 19H3C2.45 19 2 18.55 2 18V6C2 5.45 2.45 5 3 5H7L9 3H15L17 5H21C21.55 5 22 5.45 22 6V18C22 18.55 21.55 19 21 19ZM20 17H4V7H20V17Z" fill="currentColor"/>
+                </svg>
+                <span class="mt-1">Authenticate</span>
+            </a>
+            <!-- Settings -->
+            <a href="settings.html" class="flex flex-col items-center justify-center text-xs font-medium text-[#89CFF0]">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <path d="M19.14 12.94C19.18 12.64 19.2 12.33 19.2 12C19.2 11.68 19.18 11.36 19.13 11.06L21.16 9.48C21.34 9.34 21.39 9.07 21.28 8.87L19.36 5.55C19.24 5.33 18.99 5.26 18.77 5.33L16.38 6.29C15.88 5.91 15.35 5.59 14.76 5.35L14.4 2.81C14.36 2.57 14.16 2.4 13.92 2.4H10.08C9.84 2.4 9.65 2.57 9.61 2.81L9.25 5.35C8.66 5.59 8.12 5.92 7.63 6.29L5.24 5.33C5.02 5.25 4.77 5.33 4.65 5.55L2.74 8.87C2.62 9.08 2.66 9.34 2.86 9.48L4.89 11.06C4.84 11.36 4.8 11.69 4.8 12C4.8 12.31 4.82 12.64 4.87 12.94L2.84 14.52C2.66 14.66 2.61 14.93 2.72 15.13L4.64 18.45C4.76 18.67 5.01 18.74 5.23 18.67L7.62 17.71C8.12 18.09 8.65 18.41 9.24 18.65L9.6 21.19C9.65 21.43 9.84 21.6 10.08 21.6H13.92C14.16 21.6 14.36 21.43 14.39 21.19L14.75 18.65C15.34 18.41 15.88 18.09 16.37 17.71L18.76 18.67C18.98 18.75 19.23 18.67 19.35 18.45L21.27 15.13C21.39 14.91 21.34 14.66 21.15 14.52L19.14 12.94ZM12 15.6C10.02 15.6 8.4 13.98 8.4 12C8.4 10.02 10.02 8.4 12 8.4C13.98 8.4 15.6 10.02 15.6 12C15.6 13.98 13.98 15.6 12 15.6Z" fill="currentColor"/>
+                </svg>
+                <span class="mt-1">Settings</span>
+            </a>
+            <!-- Admin (hidden by default, shown for admin users) -->
+            <a href="admin.html" id="admin-link" class="flex flex-col items-center justify-center text-xs font-medium text-gray-400 hidden">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 4L13.5 7H7V9H13.5L15 12L21 9ZM16 12C17.1 12 18 12.9 18 14S17.1 16 16 16 14 15.1 14 14 14.9 12 16 12ZM8 12C9.1 12 10 12.9 10 14S9.1 16 8 16 6 15.1 6 14 6.9 12 8 12ZM12 14C13.1 14 14 14.9 14 16S13.1 18 12 18 10 17.1 10 16 10.9 14 12 14ZM12 20C16.4 20 20 16.4 20 12S16.4 4 12 4 4 7.6 4 12 7.6 20 12 20Z" fill="currentColor"/>
+                </svg>
+                <span class="mt-1">Admin</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(
+            'https://gyxakkxotjkdsjvbufiv.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5eGFra3hvdGprZHNqdmJ1Zml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMjc1MTMsImV4cCI6MjA2NzcwMzUxM30.RT0VJKgdYSUJXzA34diTOpCvenMT6qjMfHaLmCAvEpk'
+        );
+
+        // DOM elements
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        const errorState = document.getElementById('errorState');
+        const chatContent = document.getElementById('chatContent');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const messageInputContainer = document.getElementById('messageInputContainer');
+
+        // Current user data
+        let currentUser = null;
+
+        /**
+         * Check table structure to verify columns exist
+         */
+        async function checkTableStructure() {
+            try {
+                console.log('🔍 Checking support_messages table structure...');
+                
+                // Get table definition using system schema
+                const { data, error } = await supabase
+                    .from('support_messages')
+                    .select('user_id, message, status, created_at')
+                    .limit(0);
+                
+                if (error) {
+                    console.error('❌ Error checking table structure:', error);
+                    return false;
+                }
+                
+                console.log('✅ Table structure verified successfully');
+                return true;
+            } catch (error) {
+                console.error('❌ Error in checkTableStructure:', error);
+                return false;
+            }
+        }
+
+        /**
+         * Check user session and load messages
+         */
+        async function initializePage() {
+            try {
+                // Get current user
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                
+                if (userError || !user) {
+                    console.error('❌ Error getting user:', userError);
+                    window.location.href = 'index.html'; // Redirect to login
+                    return;
+                }
+                
+                currentUser = user;
+                console.log('👤 Current user:', user.id);
+                
+                // Check table structure
+                const tableStructureValid = await checkTableStructure();
+                if (!tableStructureValid) {
+                    console.error('❌ Table structure validation failed');
+                    showErrorState();
+                    return;
+                }
+                
+                // Show message input
+                messageInputContainer.classList.remove('hidden');
+                
+                // Load messages
+                await loadMessages();
+                
+                // Set up event listeners
+                setupEventListeners();
+                
+                // Set up admin-aware navigation
+                setupAdminAwareNavigation();
+                
+            } catch (error) {
+                console.error('❌ Error initializing page:', error);
+                showErrorState();
+            }
+        }
+
+        /**
+         * Load support messages for current user
+         */
+        async function loadMessages() {
+            try {
+                const { data: messages, error } = await supabase
+                    .from('support_messages')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: true });
+                
+                if (error) {
+                    console.error('❌ Error fetching messages:', error);
+                    showErrorState();
+                    return;
+                }
+                
+                console.log('📨 Messages loaded:', messages);
+                
+                if (!messages || messages.length === 0) {
+                    showEmptyState();
+                    return;
+                }
+                
+                displayMessages(messages);
+                
+            } catch (error) {
+                console.error('❌ Error loading messages:', error);
+                showErrorState();
+            }
+        }
+
+        /**
+         * Display messages in the chat UI
+         * @param {Array} messages - Array of message objects
+         */
+        function displayMessages(messages) {
+            // Clear previous messages
+            messagesContainer.innerHTML = '';
+            
+            // Add each message
+            messages.forEach(message => {
+                const messageElement = createMessageElement(message);
+                messagesContainer.appendChild(messageElement);
+            });
+            
+            // Show chat content
+            loadingState.classList.add('hidden');
+            emptyState.classList.add('hidden');
+            chatContent.classList.remove('hidden');
+            
+            // Scroll to bottom
+            scrollToBottom();
+        }
+
+        /**
+         * Create a message element
+         * @param {Object} message - Message object
+         * @returns {HTMLElement} - Message element
+         */
+        function createMessageElement(message) {
+            // Create a container for the entire message thread
+            const threadContainer = document.createElement('div');
+            threadContainer.className = 'space-y-4';
+            
+            // Log the message object to debug
+            console.log('Creating message element for:', message);
+            
+            // Add user message if it exists - now RIGHT aligned
+            if (message.message && message.message.trim() !== '') {
+                const userTimestamp = formatTimestamp(message.created_at);
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.className = 'flex flex-col items-end'; // Changed to items-end for right alignment
+                userMessageDiv.innerHTML = `
+                    <div class="bg-blue-100 text-gray-800 rounded-2xl rounded-bl-none px-4 py-2 max-w-[80%]">
+                        <p class="text-gray-800">${escapeHtml(message.message)}</p>
+                    </div>
+                    <span class="text-xs text-gray-500 mt-1">${userTimestamp}</span>
+                `;
+                threadContainer.appendChild(userMessageDiv);
+            }
+            
+            // Add admin reply if it exists - now LEFT aligned
+            if (message.reply && message.reply.trim() !== '') {
+                const adminTimestamp = formatTimestamp(message.updated_at || message.created_at);
+                const adminReplyDiv = document.createElement('div');
+                adminReplyDiv.className = 'flex flex-col items-start'; // Changed to items-start for left alignment
+                adminReplyDiv.innerHTML = `
+                    <div class="bg-gray-100 text-gray-800 rounded-2xl rounded-br-none px-4 py-2 max-w-[80%]">
+                        <p>${escapeHtml(message.reply)}</p>
+                    </div>
+                    <span class="text-xs text-gray-500 mt-1">${adminTimestamp}</span>
+                `;
+                threadContainer.appendChild(adminReplyDiv);
+            }
+            
+            // If neither message nor reply has content, don't render anything
+            if ((!message.message || message.message.trim() === '') && 
+                (!message.reply || message.reply.trim() === '')) {
+                console.warn('Message has no content:', message);
+                threadContainer.className = 'hidden';
+            }
+            
+            return threadContainer;
+        }
+
+        /**
+         * Send a new message
+         * @param {string} messageText - Message text
+         */
+        async function sendMessage(messageText) {
+            try {
+                // Disable input and button
+                messageInput.disabled = true;
+                sendButton.disabled = true;
+                
+                // Create message object
+                const messageData = {
+                    user_id: currentUser.id,
+                    message: messageText,
+                    status: 'pending'
+                };
+                
+                console.log('📤 Sending message:', messageData);
+                
+                // Insert message into Supabase
+                const { data, error } = await supabase
+                    .from('support_messages')
+                    .insert([messageData])
+                    .select();
+                
+                if (error) {
+                    console.error('❌ Error sending message:', error);
+                    console.error('Error details:', {
+                        code: error.code,
+                        message: error.message,
+                        details: error.details,
+                        hint: error.hint
+                    });
+                    
+                    // Try fallback method if the error is related to the status column
+                    if (error.message && error.message.includes('status')) {
+                        console.log('⚠️ Trying fallback method without status field...');
+                        return await sendMessageFallback(messageText);
+                    }
+                    
+                    // Show user-friendly error message
+                    let errorMessage = 'Failed to send message. Please try again.';
+                    alert(errorMessage);
+                    messageInput.disabled = false;
+                    sendButton.disabled = false;
+                    return;
+                }
+                
+                console.log('✅ Message sent:', data);
+                
+                // Clear input
+                messageInput.value = '';
+                
+                // Reload messages
+                await loadMessages();
+                
+                // Re-enable input
+                messageInput.disabled = false;
+                messageInput.focus();
+                
+            } catch (error) {
+                console.error('❌ Error in sendMessage:', error);
+                alert('Failed to send message. Please try again.');
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+            }
+        }
+        
+        /**
+         * Fallback method for sending messages (without status field)
+         * @param {string} messageText - Message text
+         */
+        async function sendMessageFallback(messageText) {
+            try {
+                // Try inserting without the status field
+                const { data, error } = await supabase
+                    .from('support_messages')
+                    .insert([{
+                        user_id: currentUser.id,
+                        message: messageText
+                    }])
+                    .select();
+                
+                if (error) {
+                    console.error('❌ Fallback method also failed:', error);
+                    console.log('⚠️ Trying SQL query approach...');
+                    return await sendMessageSql(messageText);
+                }
+                
+                console.log('✅ Message sent using fallback method:', data);
+                
+                // Clear input
+                messageInput.value = '';
+                
+                // Reload messages
+                await loadMessages();
+                
+                // Re-enable input
+                messageInput.disabled = false;
+                messageInput.focus();
+                
+            } catch (error) {
+                console.error('❌ Error in sendMessageFallback:', error);
+                alert('Failed to send message. Please try again later.');
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+            }
+        }
+        
+        /**
+         * Send message using direct SQL query
+         * @param {string} messageText - Message text
+         */
+        async function sendMessageSql(messageText) {
+            try {
+                // Use direct SQL query with RPC function
+                const { data, error } = await supabase.rpc('insert_support_message', {
+                    p_user_id: currentUser.id,
+                    p_message: messageText,
+                    p_status: 'pending'
+                });
+                
+                if (error) {
+                    console.error('❌ SQL query approach failed:', error);
+                    alert('Failed to send message. The support team has been notified.');
+                    messageInput.disabled = false;
+                    sendButton.disabled = false;
+                    return;
+                }
+                
+                console.log('✅ Message sent using SQL query:', data);
+                
+                // Clear input
+                messageInput.value = '';
+                
+                // Reload messages
+                await loadMessages();
+                
+                // Re-enable input
+                messageInput.disabled = false;
+                messageInput.focus();
+                
+            } catch (error) {
+                console.error('❌ Error in sendMessageSql:', error);
+                alert('Failed to send message. Please try again later.');
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+            }
+        }
+
+        /**
+         * Set up event listeners
+         */
+        function setupEventListeners() {
+            // Send button click
+            sendButton.addEventListener('click', () => {
+                const messageText = messageInput.value.trim();
+                if (messageText) {
+                    sendMessage(messageText);
+                }
+            });
+            
+            // Enter key in message input
+            messageInput.addEventListener('keypress', event => {
+                if (event.key === 'Enter') {
+                    const messageText = messageInput.value.trim();
+                    if (messageText) {
+                        event.preventDefault();
+                        sendMessage(messageText);
+                    }
+                }
+            });
+            
+            // Enable/disable send button based on input
+            messageInput.addEventListener('input', () => {
+                sendButton.disabled = !messageInput.value.trim();
+                if (messageInput.value.trim()) {
+                    sendButton.classList.add('hover:bg-primary-dark', 'cursor-pointer');
+                    sendButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    sendButton.classList.remove('hover:bg-primary-dark', 'cursor-pointer');
+                    sendButton.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            });
+        }
+
+        /**
+         * Format timestamp
+         * @param {string} timestamp - ISO timestamp
+         * @returns {string} - Formatted timestamp
+         */
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return '';
+            
+            try {
+                const date = new Date(timestamp);
+                const now = new Date();
+                const diffInHours = (now - date) / (1000 * 60 * 60);
+                
+                // Check if it's today
+                if (diffInHours < 24 && 
+                    date.getDate() === now.getDate() && 
+                    date.getMonth() === now.getMonth() && 
+                    date.getFullYear() === now.getFullYear()) {
+                    // Today: show time only (12-hour format with AM/PM)
+                    return date.toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: true 
+                    });
+                } else {
+                    // Not today: show date and time
+                    return date.toLocaleDateString([], { 
+                        month: 'short', 
+                        day: 'numeric' 
+                    }) + ' ' + date.toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                }
+            } catch (error) {
+                console.error('Error formatting timestamp:', error);
+                return 'Invalid date';
+            }
+        }
+
+        /**
+         * Escape HTML to prevent XSS
+         * @param {string} html - HTML string
+         * @returns {string} - Escaped HTML
+         */
+        function escapeHtml(html) {
+            if (!html) return '';
+            const div = document.createElement('div');
+            div.textContent = html;
+            return div.innerHTML;
+        }
+
+        /**
+         * Scroll to bottom of messages container
+         */
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        /**
+         * Show empty state
+         */
+        function showEmptyState() {
+            loadingState.classList.add('hidden');
+            chatContent.classList.add('hidden');
+            errorState.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+        }
+
+        /**
+         * Show error state
+         */
+        function showErrorState() {
+            loadingState.classList.add('hidden');
+            chatContent.classList.add('hidden');
+            emptyState.classList.add('hidden');
+            errorState.classList.remove('hidden');
+        }
+
+        /**
+         * Set up navigation links based on admin status
+         */
+        function setupAdminAwareNavigation() {
+            const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+            const dashboardLink = document.getElementById('dashboard-link');
+            const adminLink = document.getElementById('admin-link');
+            
+            // Set dashboard link based on admin status
+            if (dashboardLink) {
+                dashboardLink.href = isAdmin ? 'dashboard-admin.html' : 'dashboard.html';
+            }
+            
+            // Show/hide admin link based on admin status
+            if (adminLink && isAdmin) {
+                adminLink.classList.remove('hidden');
+            }
+        }
+
+        // Initialize page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html> 

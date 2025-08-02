@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Log | Vrai Authentication</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../supabase-init.js"></script>
+    <script src="../admin-session.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#B0D6F8',
+                        'primary-dark': '#89CFF0',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Playfair Display', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-[#F9FAFB] font-sans text-[#1A1A1A] antialiased">
+    <div class="w-full max-w-md mx-auto min-h-screen bg-[#F9FAFB]">
+        <!-- Top App Bar -->
+        <div class="bg-white shadow-sm sticky top-0 z-10">
+            <div class="flex items-center justify-between px-6 py-4">
+                <button onclick="history.back()" class="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <h1 class="text-lg font-semibold text-gray-900">Activity Log</h1>
+                <div class="w-10"></div>
+            </div>
+        </div>
+
+        <!-- Content Container -->
+        <div class="px-4 py-6 space-y-6">
+            <!-- Activity List -->
+            <div class="space-y-2" id="activity-list">
+                <!-- Loading placeholder -->
+                <div class="bg-white rounded-md p-3 shadow-sm flex justify-center" id="loading-indicator">
+                    <svg class="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <!-- Activity items will be populated here -->
+            </div>
+        </div>
+
+        <!-- Bottom padding for navigation -->
+        <div class="h-20"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is admin
+            if (!isAdminUser()) {
+                window.location.href = '../index.html';
+                return;
+            }
+
+            loadActivityLog();
+        });
+
+        async function loadActivityLog() {
+            const activityList = document.getElementById('activity-list');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            
+            // Show loading indicator
+            loadingIndicator.style.display = 'flex';
+            
+            try {
+                // Query Supabase for activity log
+                let query = window.supabaseClient
+                    .from('authentication_requests')
+                    .select(`
+                        id,
+                        human_readable_id,
+                        model_name,
+                        status,
+                        created_at,
+                        updated_at,
+                        handled_by,
+                        user_email,
+                        profiles(full_name, email)
+                    `)
+                    .order('updated_at', { ascending: false })
+                    .limit(50);
+
+                // Execute query
+                const { data: activities, error } = await query;
+
+                if (error) {
+                    throw error;
+                }
+
+                // Hide loading indicator
+                loadingIndicator.style.display = 'none';
+
+                // Clear previous items
+                while (activityList.firstChild !== loadingIndicator) {
+                    activityList.removeChild(activityList.firstChild);
+                }
+
+                // Display activities or empty state
+                if (activities && activities.length > 0) {
+                    activities.forEach(activity => {
+                        const activityItem = createActivityItem(activity);
+                        activityList.appendChild(activityItem);
+                    });
+                } else {
+                    const emptyState = document.createElement('div');
+                    emptyState.className = 'bg-white rounded-md p-3 shadow-sm text-center text-gray-500';
+                    emptyState.textContent = 'No activity found';
+                    activityList.appendChild(emptyState);
+                }
+            } catch (error) {
+                console.error('Error loading activity log:', error);
+                
+                // Hide loading indicator
+                loadingIndicator.style.display = 'none';
+                
+                // Show error message
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'bg-red-50 text-red-600 rounded-md p-3 shadow-sm text-center';
+                errorMessage.textContent = 'Failed to load activity log. Please try again.';
+                activityList.appendChild(errorMessage);
+            }
+        }
+
+        function createActivityItem(activity) {
+            const item = document.createElement('div');
+            item.className = 'bg-white rounded-md p-3 shadow-sm';
+            
+            // Determine status color and text
+            let statusDotColor = '';
+            let statusText = '';
+            
+            switch (activity.status) {
+                case 'Authenticated':
+                    statusDotColor = 'bg-green-500';
+                    statusText = 'Authenticated';
+                    break;
+                case 'Rejected':
+                    statusDotColor = 'bg-red-500';
+                    statusText = 'Rejected';
+                    break;
+                case 'Action Required':
+                    statusDotColor = 'bg-yellow-500';
+                    statusText = 'Action Required';
+                    break;
+                case 'Pending Review':
+                    statusDotColor = 'bg-yellow-500';
+                    statusText = 'Submitted';
+                    break;
+                default:
+                    statusDotColor = 'bg-blue-500';
+                    statusText = activity.status;
+            }
+            
+            // Format time ago
+            const timeAgo = getTimeAgo(new Date(activity.updated_at || activity.created_at));
+            
+            // Get user email
+            const userEmail = activity.user_email || (activity.profiles ? activity.profiles.email : 'Unknown');
+            
+            // Create HTML content matching the admin.html design with submitted by info
+            item.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="w-2 h-2 ${statusDotColor} rounded-full flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-medium text-gray-900">${statusText} ${activity.model_name || 'Unknown Model'}</p>
+                            <p class="text-xs text-gray-500">${timeAgo}</p>
+                        </div>
+                        <p class="text-xs text-gray-500">
+                            ${activity.human_readable_id || `Vrai#${activity.id.substring(0, 6)}`}
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Submitted by ${userEmail}
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            // Make the entire item clickable
+            item.style.cursor = 'pointer';
+            item.addEventListener('click', () => {
+                window.location.href = `../admin-submission-detail.html?id=${activity.id}`;
+            });
+            
+            return item;
+        }
+        
+        // Helper function to format time ago
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) {
+                return 'Just now';
+            }
+            
+            const diffInMinutes = Math.floor(diffInSeconds / 60);
+            if (diffInMinutes < 60) {
+                return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+            }
+            
+            const diffInHours = Math.floor(diffInMinutes / 60);
+            if (diffInHours < 24) {
+                return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+            }
+            
+            const diffInDays = Math.floor(diffInHours / 24);
+            if (diffInDays === 1) {
+                return 'Yesterday';
+            }
+            if (diffInDays < 7) {
+                return `${diffInDays} days ago`;
+            }
+            
+            // Format as date for older items
+            const options = { month: 'short', day: 'numeric' };
+            if (date.getFullYear() !== now.getFullYear()) {
+                options.year = 'numeric';
+            }
+            return date.toLocaleDateString('en-US', options);
+        }
+    </script>
+</body>
+</html> 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

@@ -100,16 +100,21 @@ module.exports = (req, res) => {
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    res.statusCode = 200;
+    return res.end();
   }
   
+  // Set content type for JSON response
+  res.setHeader('Content-Type', 'application/json');
+  
   // Simple response for testing
-  res.json({
+  const responseData = {
     message: 'Vrai API is working!',
     timestamp: new Date().toISOString(),
     method: req.method,
     url: req.url,
     environment: process.env.NODE_ENV || 'development'
-  });
+  };
+  
+  return res.end(JSON.stringify(responseData, null, 2));
 }; 

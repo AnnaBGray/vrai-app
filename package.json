@@ -2,13 +2,14 @@
   "name": "vrai-authentication-system",
   "version": "1.0.0",
   "description": "Luxury bag authentication platform with user registration, login, and file upload functionality",
-  "main": "server.js",
+  "main": "api/index.js",
   "private": true,
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
+    "start": "node api/index.js",
+    "dev": "node api/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "vercel-build": "echo 'Building for Vercel deployment'"
+    "vercel-build": "echo 'Build completed for Vercel deployment'",
+    "build": "echo 'Build completed'"
   },
   "keywords": [
     "express",

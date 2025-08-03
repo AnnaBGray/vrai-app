@@ -519,23 +519,101 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // 3. Now manually create the profile record
                 console.log('📡 Creating user profile in profiles table...');
-                const { error: profileError } = await supabase
-                    .from('profiles')
-                    .insert({
-                        id: authData.user.id,
-                        full_name: formData.fullName,
-                        display_name: formData.displayName,
-                        email: formData.email,
-                        phone_number: formData.phone
-                        // created_at and updated_at will use default values
+                
+                // Debug the user ID before profile creation
+                console.log('🔑 User ID for profile creation:', authData.user.id);
+                console.log('🔍 User object type:', typeof authData.user);
+                console.log('🔍 ID type:', typeof authData.user.id);
+                
+                // Ensure the ID is a valid UUID string
+                let userId = authData.user.id;
+                if (!userId || typeof userId !== 'string' || userId.length < 10) {
+                    console.error('❌ Invalid user ID for profile creation:', userId);
+                    showMessage('Account created but profile setup failed: Invalid user ID.', 'error');
+                    return;
+                }
+                
+                // Get the current session to ensure we have a valid user
+                console.log('🔐 Getting current session to verify authentication...');
+                const { data: sessionData } = await supabase.auth.getSession();
+                
+                if (!sessionData || !sessionData.session) {
+                    console.warn('⚠️ No active session found, using signup user ID');
+                    
+                    // Double-check if we're authenticated
+                    const { data: authUserData } = await supabase.auth.getUser();
+                    if (!authUserData || !authUserData.user) {
+                        console.error('❌ Not authenticated! Attempting to create profile with explicit ID');
+                    } else {
+                        console.log('✅ Auth user found:', authUserData.user.id);
+                        userId = authUserData.user.id;
+                    }
+                } else {
+                    console.log('✅ Active session found:', {
+                        sessionUserId: sessionData.session.user.id,
+                        matchesSignupId: sessionData.session.user.id === userId
                     });
+                    
+                    // If session ID doesn't match signup ID, use session ID instead
+                    if (sessionData.session.user.id !== userId) {
+                        console.warn('⚠️ Session user ID different from signup ID, using session ID');
+                        userId = sessionData.session.user.id;
+                    }
+                }
+                
+                // Create the profile with explicit ID
+                const profileData = {
+                    id: userId,
+                    full_name: formData.fullName,
+                    display_name: formData.displayName,
+                    email: formData.email,
+                    phone_number: formData.phone
+                };
+                
+                console.log('📦 Profile data to insert:', profileData);
+                
+                const { data: createdProfile, error: profileError } = await supabase
+                    .from('profiles')
+                    .insert(profileData)
+                    .select();
                 
                 if (profileError) {
                     console.error('❌ Profile creation error:', profileError);
+                    
+                    // If the error is related to auth/permissions, try a different approach
+                    if (profileError.code === '42501' || // permission denied
+                        profileError.message?.includes('permission') ||
+                        profileError.message?.includes('not-authorized') ||
+                        profileError.message?.includes('null value')) {
+                        
+                        console.warn('⚠️ Permission issue detected, trying alternative approach...');
+                        
+                        // Try again with a different approach - using a custom endpoint
+                        try {
+                            // Create a custom endpoint in your Supabase project that uses service role
+                            // This is just a placeholder - you'll need to implement this endpoint
+                            const response = await fetch('/api/create-profile', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(profileData)
+                            });
+                            
+                            if (response.ok) {
+                                console.log('✅ Profile created via API endpoint');
+                            } else {
+                                console.error('❌ API endpoint failed:', await response.text());
+                            }
+                        } catch (apiError) {
+                            console.error('❌ API call error:', apiError);
+                        }
+                    }
+                    
                     showMessage('Account created but profile setup failed. Please contact support.', 'error');
                     // Continue with the flow despite profile error
                 } else {
-                    console.log('✅ Profile created successfully');
+                    console.log('✅ Profile created successfully:', createdProfile);
                 }
                 
                 // Log metadata for debugging

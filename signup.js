@@ -285,20 +285,41 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             try {
                 console.log('🔍 Using iti.isValidNumber()');
-                const result = iti.isValidNumber();
-                console.log('🔍 iti.isValidNumber() result:', result);
+                const isValid = iti.isValidNumber();
+                console.log('🔍 iti.isValidNumber() result:', isValid);
                 
-                // If iti validation fails, try a more lenient approach
-                if (!result) {
-                    console.log('🔍 iti validation failed, trying fallback validation');
+                // If validation fails, let's get more details
+                if (!isValid) {
+                    console.log('🔍 Phone number details:');
+                    console.log('  - Raw value:', phoneInput.value);
+                    console.log('  - Formatted number:', iti.getNumber());
+                    console.log('  - Country code:', iti.getSelectedCountryData()?.iso2);
+                    console.log('  - Country name:', iti.getSelectedCountryData()?.name);
+                    console.log('  - National number:', iti.getNumber(intlTelInputUtils.numberType.NATIONAL));
+                    console.log('  - International number:', iti.getNumber(intlTelInputUtils.numberType.INTERNATIONAL));
+                    
+                    // More lenient validation for Malaysian numbers
                     const phoneValue = phoneInput.value.trim();
-                    // More lenient validation for international numbers
-                    const isValid = phoneValue.length >= 7;
-                    console.log('🔍 Fallback validation result:', isValid);
-                    return isValid;
+                    const countryData = iti.getSelectedCountryData();
+                    
+                    // For Malaysia (MY), accept numbers with 8-11 digits
+                    if (countryData?.iso2 === 'MY') {
+                        const digitsOnly = phoneValue.replace(/\D/g, '');
+                        const isValidMalaysian = digitsOnly.length >= 8 && digitsOnly.length <= 11;
+                        console.log('🔍 Malaysian number validation:', {
+                            digitsOnly,
+                            length: digitsOnly.length,
+                            isValidMalaysian
+                        });
+                        
+                        if (isValidMalaysian) {
+                            console.log('🔍 Accepting Malaysian number with lenient validation');
+                            return true;
+                        }
+                    }
                 }
                 
-                return result;
+                return isValid;
             } catch (error) {
                 console.warn('Phone validation error:', error);
                 // Fallback validation
@@ -341,10 +362,6 @@ document.addEventListener('DOMContentLoaded', function() {
      * Validate all form fields with inline error messages
      */
     function validateForm() {
-        console.log('🔧 validateForm function called');
-        console.log('🔧 validators object:', validators);
-        console.log('🔧 typeof validators:', typeof validators);
-        
         const fullName = fullNameInput.value.trim();
         const displayName = displayNameInput.value.trim();
         const email = emailInput.value.trim();
@@ -352,106 +369,70 @@ document.addEventListener('DOMContentLoaded', function() {
         const password = passwordInput.value;
         const confirmPassword = confirmPasswordInput.value;
         
-        console.log('🔍 Validation Debug Info:');
-        console.log('  Full Name:', fullName, 'Length:', fullName.length);
-        console.log('  Display Name:', displayName, 'Length:', displayName.length);
-        console.log('  Email:', email);
-        console.log('  Phone:', phone);
-        console.log('  Password Length:', password.length);
-        console.log('  Confirm Password Length:', confirmPassword.length);
-        
         // Clear any existing messages and validation states
         clearMessage();
         clearPhoneValidationState();
         
         // Validation checks with inline messages
-        console.log('🔍 Checking full name validation...');
         if (!validators.isValidName(fullName)) {
-            console.log('❌ Full name validation failed');
             showMessage('Please enter a valid full name (at least 2 characters).', 'error');
             fullNameInput.focus();
             return false;
         }
-        console.log('✅ Full name validation passed');
         
-        console.log('🔍 Checking display name validation...');
         if (!validators.isValidName(displayName)) {
-            console.log('❌ Display name validation failed');
             showMessage('Please enter a valid display name (at least 2 characters).', 'error');
             displayNameInput.focus();
             return false;
         }
-        console.log('✅ Display name validation passed');
         
-        console.log('🔍 Checking email presence...');
         if (!email) {
-            console.log('❌ Email is empty');
             showMessage('Please enter your email address.', 'error');
             emailInput.focus();
             return false;
         }
-        console.log('✅ Email is present');
         
-        console.log('🔍 Checking email format validation...');
         if (!validators.isValidEmail(email)) {
-            console.log('❌ Email format validation failed');
             showMessage('Please enter a valid email address.', 'error');
             emailInput.focus();
             return false;
         }
-        console.log('✅ Email format validation passed');
         
-        console.log('🔍 Checking phone presence...');
         if (!phone) {
-            console.log('❌ Phone is empty');
             showMessage('Please enter your phone number.', 'error');
             phoneInput.focus();
             setPhoneValidationState('error');
             return false;
         }
-        console.log('✅ Phone is present');
         
-        console.log('🔍 Checking phone format validation...');
         if (!validators.isValidPhone()) {
-            console.log('❌ Phone format validation failed');
             showMessage('Please enter a valid phone number for the selected country.', 'error');
             phoneInput.focus();
             setPhoneValidationState('error');
             return false;
         }
-        console.log('✅ Phone format validation passed');
         
-        console.log('🔍 Checking password validation...');
         if (!validators.isValidPassword(password)) {
-            console.log('❌ Password validation failed');
             showMessage('Password must be at least 8 characters long.', 'error');
             passwordInput.focus();
             return false;
         }
-        console.log('✅ Password validation passed');
         
-        console.log('🔍 Checking confirm password presence...');
         if (!confirmPassword) {
-            console.log('❌ Confirm password is empty');
             showMessage('Please confirm your password.', 'error');
             confirmPasswordInput.focus();
             return false;
         }
-        console.log('✅ Confirm password is present');
         
-        console.log('🔍 Checking password match...');
         if (!validators.passwordsMatch(password, confirmPassword)) {
-            console.log('❌ Passwords do not match');
             showMessage('Passwords do not match. Please check and try again.', 'error');
             confirmPasswordInput.focus();
             return false;
         }
-        console.log('✅ Password match validation passed');
         
         // Set success state for phone if validation passes
         setPhoneValidationState('success');
         
-        console.log('✅ All validations passed!');
         return true;
     }
     

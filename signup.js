@@ -271,18 +271,30 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         
         isValidPhone: () => {
+            console.log('🔍 Phone validation called');
+            console.log('🔍 iti object:', iti);
+            console.log('🔍 phoneInput.value:', phoneInput.value);
+            
             if (!iti) {
+                console.log('🔍 No iti object, using fallback validation');
                 // Fallback validation if intl-tel-input isn't available
                 const phoneValue = phoneInput.value.trim();
-                return phoneValue.length >= 7 && /^[\+]?[\d\s\-\(\)]+$/.test(phoneValue);
+                const isValid = phoneValue.length >= 7 && /^[\+]?[\d\s\-\(\)]+$/.test(phoneValue);
+                console.log('🔍 Fallback validation result:', isValid);
+                return isValid;
             }
             try {
-                return iti.isValidNumber();
+                console.log('🔍 Using iti.isValidNumber()');
+                const result = iti.isValidNumber();
+                console.log('🔍 iti.isValidNumber() result:', result);
+                return result;
             } catch (error) {
                 console.warn('Phone validation error:', error);
                 // Fallback validation
                 const phoneValue = phoneInput.value.trim();
-                return phoneValue.length >= 7;
+                const isValid = phoneValue.length >= 7;
+                console.log('🔍 Error fallback validation result:', isValid);
+                return isValid;
             }
         },
         
@@ -318,6 +330,10 @@ document.addEventListener('DOMContentLoaded', function() {
      * Validate all form fields with inline error messages
      */
     function validateForm() {
+        console.log('🔧 validateForm function called');
+        console.log('🔧 validators object:', validators);
+        console.log('🔧 typeof validators:', typeof validators);
+        
         const fullName = fullNameInput.value.trim();
         const displayName = displayNameInput.value.trim();
         const email = emailInput.value.trim();

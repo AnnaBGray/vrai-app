@@ -486,6 +486,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Not logging password for security
             });
             
+            // Log the exact metadata being sent
+            const userMetadata = {
+                full_name: formData.fullName,
+                display_name: formData.displayName,
+                phone_number: formData.phone
+            };
+            
+            console.log('📋 Exact metadata being sent to Supabase:', userMetadata);
+            
             showMessage('Creating your account...', 'info');
             
             // 1. Sign up with Supabase Auth - this creates the user in auth.users
@@ -494,11 +503,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 email: formData.email,
                 password: formData.password,
                 options: {
-                    data: {
-                        full_name: formData.fullName,
-                        display_name: formData.displayName,
-                        phone_number: formData.phone // Changed to phone_number to match database column
-                    }
+                    data: userMetadata
                 }
             });
             

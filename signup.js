@@ -288,23 +288,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isValid = iti.isValidNumber();
                 console.log('🔍 iti.isValidNumber() result:', isValid);
                 
-                // If validation fails, let's get more details
+                // If validation fails, let's get more details and try our custom validation
                 if (!isValid) {
                     console.log('🔍 Phone number details:');
-                    console.log('  - Raw value:', phoneInput.value);
-                    console.log('  - Formatted number:', iti.getNumber());
-                    console.log('  - Country code:', iti.getSelectedCountryData()?.iso2);
-                    console.log('  - Country name:', iti.getSelectedCountryData()?.name);
-                    console.log('  - National number:', iti.getNumber(intlTelInputUtils.numberType.NATIONAL));
-                    console.log('  - International number:', iti.getNumber(intlTelInputUtils.numberType.INTERNATIONAL));
-                    
-                    // More lenient validation for Malaysian numbers
                     const phoneValue = phoneInput.value.trim();
                     const countryData = iti.getSelectedCountryData();
+                    const countryCode = countryData?.iso2 || '';
+                    
+                    console.log('  - Raw value:', phoneValue);
+                    console.log('  - Formatted number:', iti.getNumber());
+                    console.log('  - Country code:', countryCode);
+                    console.log('  - Country name:', countryData?.name);
+                    
+                    try {
+                        console.log('  - National number:', iti.getNumber(intlTelInputUtils.numberType.NATIONAL));
+                        console.log('  - International number:', iti.getNumber(intlTelInputUtils.numberType.INTERNATIONAL));
+                    } catch (e) {
+                        console.log('  - Error getting formatted numbers:', e.message);
+                    }
+                    
+                    // Get only the digits from the phone number
+                    const digitsOnly = phoneValue.replace(/\D/g, '');
+                    console.log('  - Digits only:', digitsOnly);
+                    console.log('  - Digits length:', digitsOnly.length);
                     
                     // For Malaysia (MY), accept numbers with 8-11 digits
-                    if (countryData?.iso2 === 'MY') {
-                        const digitsOnly = phoneValue.replace(/\D/g, '');
+                    // Case-insensitive check for 'MY' or 'my'
+                    if (countryCode.toUpperCase() === 'MY') {
                         const isValidMalaysian = digitsOnly.length >= 8 && digitsOnly.length <= 11;
                         console.log('🔍 Malaysian number validation:', {
                             digitsOnly,
@@ -313,9 +323,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                         
                         if (isValidMalaysian) {
-                            console.log('🔍 Accepting Malaysian number with lenient validation');
+                            console.log('✅ Accepting Malaysian number with lenient validation');
                             return true;
                         }
+                    }
+                    
+                    // General fallback for all countries - accept if number has reasonable length
+                    if (digitsOnly.length >= 7 && digitsOnly.length <= 15) {
+                        console.log('✅ Accepting phone number with general fallback validation');
+                        return true;
                     }
                 }
                 

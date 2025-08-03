@@ -13,7 +13,8 @@ module.exports = (req, res) => {
     // Handle root path
     if (pathname === '/' || pathname === '') {
       try {
-        const indexPath = path.join(__dirname, '..', 'index.html');
+        // In Vercel, static files are in the root, not relative to __dirname
+        const indexPath = path.join(process.cwd(), 'index.html');
         console.log('Looking for index at:', indexPath);
         if (fs.existsSync(indexPath)) {
           const content = fs.readFileSync(indexPath, 'utf8');
@@ -28,7 +29,7 @@ module.exports = (req, res) => {
                 <p>Welcome to Vrai App. The index.html file was not found.</p>
                 <p>Available HTML files:</p>
                 <ul>
-                  ${fs.readdirSync(path.join(__dirname, '..'))
+                  ${fs.readdirSync(process.cwd())
                     .filter(f => f.endsWith('.html'))
                     .map(f => `<li><a href="/${f}">${f}</a></li>`)
                     .join('')}
@@ -53,7 +54,8 @@ module.exports = (req, res) => {
     
     // For other files, remove leading slash and check
     const cleanPath = pathname.startsWith('/') ? pathname.slice(1) : pathname;
-    const filePath = path.join(__dirname, '..', cleanPath);
+    // Use process.cwd() to get the root directory where files are deployed
+    const filePath = path.join(process.cwd(), cleanPath);
     
     console.log('Clean path:', cleanPath);
     console.log('Full file path:', filePath);
@@ -79,7 +81,7 @@ module.exports = (req, res) => {
         return res.end(content);
       } else {
         console.log('File not found:', filePath);
-        console.log('Directory contents:', fs.readdirSync(path.join(__dirname, '..')));
+        console.log('Directory contents:', fs.readdirSync(process.cwd()));
         
         return res.end(`
           <html>
@@ -90,7 +92,7 @@ module.exports = (req, res) => {
               <p>Looking for: ${filePath}</p>
               <p>Available files in root directory:</p>
               <ul>
-                ${fs.readdirSync(path.join(__dirname, '..'))
+                ${fs.readdirSync(process.cwd())
                   .filter(f => f.endsWith('.html'))
                   .map(f => `<li><a href="/${f}">${f}</a></li>`)
                   .join('')}

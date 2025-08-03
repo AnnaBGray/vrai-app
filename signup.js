@@ -597,15 +597,20 @@ document.addEventListener('DOMContentLoaded', function() {
      * Handle form submission with inline messages
      */
     async function handleFormSubmission(event) {
+        console.log('🚀 Form submission started');
         event.preventDefault(); // Prevent page reload
         
+        console.log('📝 Validating form...');
         // Validate form
         if (!validateForm()) {
+            console.log('❌ Form validation failed');
             return;
         }
         
+        console.log('✅ Form validation passed');
         // Prepare and submit data
         const formData = prepareFormData();
+        console.log('📦 Form data prepared:', formData);
         
         // Disable form during submission
         const submitButton = signupForm.querySelector('button[type="submit"]');
@@ -614,7 +619,11 @@ document.addEventListener('DOMContentLoaded', function() {
         submitButton.innerHTML = '<span class="inline-block animate-spin mr-2">↻</span> Creating Account...';
         
         try {
+            console.log('🔄 Submitting form to Supabase...');
             await submitForm(formData);
+        } catch (error) {
+            console.error('❌ Form submission error:', error);
+            showMessage('An unexpected error occurred. Please try again.', 'error');
         } finally {
             // Re-enable form
             submitButton.disabled = false;
@@ -650,6 +659,8 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     async function initialize() {
         try {
+            console.log('🔧 Starting signup form initialization...');
+            
             // Wait for intl-tel-input to be fully loaded
             let retries = 0;
             while (typeof window.intlTelInput !== 'function' && retries < 10) {
@@ -676,7 +687,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Add form submission handler
             if (signupForm) {
+                console.log('📝 Adding form submission handler to signupForm');
                 signupForm.addEventListener('submit', handleFormSubmission);
+                console.log('✅ Form submission handler added successfully');
+            } else {
+                console.error('❌ signupForm element not found!');
             }
             
             console.log('✅ Signup form initialized successfully');

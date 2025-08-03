@@ -14,6 +14,7 @@
     { "src": "/debug", "dest": "/api/debug.js" },
     { "src": "/test", "dest": "/api/test.js" },
     { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "^/(.*[^/])$", "has": [{ "type": "file", "value": "/$1.html" }], "dest": "/$1.html" },
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }

@@ -8,10 +8,13 @@ module.exports = (req, res) => {
     const url = new URL(req.url, 'http://localhost');
     const pathname = url.pathname;
     
+    console.log('Requested pathname:', pathname);
+    
     // Handle root path
     if (pathname === '/' || pathname === '') {
       try {
         const indexPath = path.join(__dirname, '..', 'index.html');
+        console.log('Looking for index at:', indexPath);
         if (fs.existsSync(indexPath)) {
           const content = fs.readFileSync(indexPath, 'utf8');
           res.setHeader('Content-Type', 'text/html');
@@ -27,7 +30,7 @@ module.exports = (req, res) => {
                 <ul>
                   ${fs.readdirSync(path.join(__dirname, '..'))
                     .filter(f => f.endsWith('.html'))
-                    .map(f => `<li>${f}</li>`)
+                    .map(f => `<li><a href="/${f}">${f}</a></li>`)
                     .join('')}
                 </ul>
               </body>
@@ -48,9 +51,12 @@ module.exports = (req, res) => {
       }
     }
     
-    // Safety check - prevent path traversal
-    const normalizedPath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
-    const filePath = path.join(__dirname, '..', normalizedPath);
+    // For other files, remove leading slash and check
+    const cleanPath = pathname.startsWith('/') ? pathname.slice(1) : pathname;
+    const filePath = path.join(__dirname, '..', cleanPath);
+    
+    console.log('Clean path:', cleanPath);
+    console.log('Full file path:', filePath);
     
     try {
       if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
@@ -69,17 +75,25 @@ module.exports = (req, res) => {
         
         const content = fs.readFileSync(filePath);
         res.setHeader('Content-Type', contentType);
+        console.log('Serving file:', filePath, 'with content type:', contentType);
         return res.end(content);
       } else {
+        console.log('File not found:', filePath);
+        console.log('Directory contents:', fs.readdirSync(path.join(__dirname, '..')));
+        
         return res.end(`
           <html>
             <head><title>File Not Found</title></head>
             <body>
               <h1>File Not Found</h1>
               <p>The requested file ${pathname} was not found.</p>
+              <p>Looking for: ${filePath}</p>
               <p>Available files in root directory:</p>
               <ul>
-                ${fs.readdirSync(path.join(__dirname, '..')).slice(0, 20).map(f => `<li>${f}</li>`).join('')}
+                ${fs.readdirSync(path.join(__dirname, '..'))
+                  .filter(f => f.endsWith('.html'))
+                  .map(f => `<li><a href="/${f}">${f}</a></li>`)
+                  .join('')}
               </ul>
             </body>
           </html>
@@ -93,6 +107,8 @@ module.exports = (req, res) => {
           <body>
             <h1>Error serving file</h1>
             <p>${err.message}</p>
+            <p>Pathname: ${pathname}</p>
+            <p>File path: ${filePath}</p>
           </body>
         </html>
       `);

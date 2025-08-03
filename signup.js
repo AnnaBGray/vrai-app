@@ -486,15 +486,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Not logging password for security
             });
             
-            // Log the exact metadata being sent
-            const userMetadata = {
-                full_name: formData.fullName,
-                display_name: formData.displayName,
-                phone_number: formData.phone
-            };
-            
-            console.log('📋 Exact metadata being sent to Supabase:', userMetadata);
-            
             showMessage('Creating your account...', 'info');
             
             // 1. Sign up with Supabase Auth - this creates the user in auth.users
@@ -503,7 +494,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 email: formData.email,
                 password: formData.password,
                 options: {
-                    data: userMetadata
+                    data: {
+                        full_name: formData.fullName,
+                        display_name: formData.displayName,
+                        phone_number: formData.phone // Changed to phone_number to match database column
+                    }
                 }
             });
             
@@ -522,6 +517,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     email: authData.user.email
                 });
                 
+                // 3. Now manually create the profile record
+                console.log('📡 Creating user profile in profiles table...');
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .insert({
+                        id: authData.user.id,
+                        full_name: formData.fullName,
+                        display_name: formData.displayName,
+                        email: formData.email,
+                        phone_number: formData.phone
+                        // created_at and updated_at will use default values
+                    });
+                
+                if (profileError) {
+                    console.error('❌ Profile creation error:', profileError);
+                    showMessage('Account created but profile setup failed. Please contact support.', 'error');
+                    // Continue with the flow despite profile error
+                } else {
+                    console.log('✅ Profile created successfully');
+                }
+                
                 // Log metadata for debugging
                 console.log('📋 User metadata sent:', {
                     full_name: formData.fullName,
@@ -532,8 +548,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Show success message without waiting for profile creation
                 showMessage('Registration successful! Please check your email for confirmation. Redirecting to login...', 'success');
                 
-                // Let the auth webhook handle profile creation instead of doing it here
-                // This prevents the infinite recursion in the database policy
                 console.log('⏳ Redirecting to login page in 2 seconds...');
                 
                 // Redirect to login page after success

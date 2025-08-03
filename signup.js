@@ -469,15 +469,27 @@ document.addEventListener('DOMContentLoaded', function() {
      * Submit form data to Supabase
      */
     async function submitForm(formData) {
+        console.log('🚀 Starting form submission to Supabase');
+        
         if (!supabase) {
+            console.error('❌ Supabase client not available');
             showMessage('Authentication service is not available. Please refresh the page.', 'error');
             return;
         }
         
         try {
+            console.log('ℹ️ Creating account with data:', {
+                email: formData.email,
+                fullName: formData.fullName,
+                displayName: formData.displayName,
+                phone: formData.phone,
+                // Not logging password for security
+            });
+            
             showMessage('Creating your account...', 'info');
             
             // 1. Sign up with Supabase Auth - this creates the user in auth.users
+            console.log('📡 Calling supabase.auth.signUp()...');
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: formData.email,
                 password: formData.password,
@@ -490,16 +502,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
+            console.log('📡 supabase.auth.signUp() response received');
+            
             if (authError) {
+                console.error('❌ Supabase Auth error:', authError);
                 showMessage(authError.message || 'Registration failed. Please try again.', 'error');
-                console.error('Supabase Auth error:', authError);
                 return;
             }
             
             // 2. User created successfully in auth.users
             if (authData && authData.user) {
+                console.log('✅ User created successfully:', {
+                    id: authData.user.id,
+                    email: authData.user.email
+                });
+                
                 // Log metadata for debugging
-                console.log('User metadata sent:', {
+                console.log('📋 User metadata sent:', {
                     full_name: formData.fullName,
                     display_name: formData.displayName,
                     phone_number: formData.phone
@@ -510,17 +529,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Let the auth webhook handle profile creation instead of doing it here
                 // This prevents the infinite recursion in the database policy
+                console.log('⏳ Redirecting to login page in 2 seconds...');
                 
                 // Redirect to login page after success
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 2000);
             } else {
+                console.error('❌ Auth data missing user object:', authData);
                 showMessage('Registration failed. Please try again.', 'error');
             }
             
         } catch (error) {
-            console.error('Registration error:', error);
+            console.error('❌ Registration error:', error);
             showMessage('An unexpected error occurred. Please try again later.', 'error');
         }
     }
@@ -670,17 +691,25 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('✅ Form validation passed');
         // Prepare and submit data
         const formData = prepareFormData();
-        console.log('📦 Form data prepared:', formData);
+        console.log('📦 Form data prepared:', {
+            email: formData.email,
+            fullName: formData.fullName,
+            displayName: formData.displayName,
+            phone: formData.phone
+            // Not logging password for security
+        });
         
         // Disable form during submission
         const submitButton = signupForm.querySelector('button[type="submit"]');
         const originalButtonText = submitButton.innerHTML;
         submitButton.disabled = true;
         submitButton.innerHTML = '<span class="inline-block animate-spin mr-2">↻</span> Creating Account...';
+        console.log('🔒 Form disabled during submission');
         
         try {
             console.log('🔄 Submitting form to Supabase...');
             await submitForm(formData);
+            console.log('✅ Form submission completed');
         } catch (error) {
             console.error('❌ Form submission error:', error);
             showMessage('An unexpected error occurred. Please try again.', 'error');
@@ -688,6 +717,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Re-enable form
             submitButton.disabled = false;
             submitButton.innerHTML = originalButtonText;
+            console.log('🔓 Form re-enabled after submission');
         }
     }
     

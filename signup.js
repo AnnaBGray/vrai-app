@@ -287,6 +287,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('🔍 Using iti.isValidNumber()');
                 const result = iti.isValidNumber();
                 console.log('🔍 iti.isValidNumber() result:', result);
+                
+                // If iti validation fails, try a more lenient approach
+                if (!result) {
+                    console.log('🔍 iti validation failed, trying fallback validation');
+                    const phoneValue = phoneInput.value.trim();
+                    // More lenient validation for international numbers
+                    const isValid = phoneValue.length >= 7;
+                    console.log('🔍 Fallback validation result:', isValid);
+                    return isValid;
+                }
+                
                 return result;
             } catch (error) {
                 console.warn('Phone validation error:', error);

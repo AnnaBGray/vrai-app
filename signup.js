@@ -325,70 +325,106 @@ document.addEventListener('DOMContentLoaded', function() {
         const password = passwordInput.value;
         const confirmPassword = confirmPasswordInput.value;
         
+        console.log('🔍 Validation Debug Info:');
+        console.log('  Full Name:', fullName, 'Length:', fullName.length);
+        console.log('  Display Name:', displayName, 'Length:', displayName.length);
+        console.log('  Email:', email);
+        console.log('  Phone:', phone);
+        console.log('  Password Length:', password.length);
+        console.log('  Confirm Password Length:', confirmPassword.length);
+        
         // Clear any existing messages and validation states
         clearMessage();
         clearPhoneValidationState();
         
         // Validation checks with inline messages
+        console.log('🔍 Checking full name validation...');
         if (!validators.isValidName(fullName)) {
+            console.log('❌ Full name validation failed');
             showMessage('Please enter a valid full name (at least 2 characters).', 'error');
             fullNameInput.focus();
             return false;
         }
+        console.log('✅ Full name validation passed');
         
+        console.log('🔍 Checking display name validation...');
         if (!validators.isValidName(displayName)) {
+            console.log('❌ Display name validation failed');
             showMessage('Please enter a valid display name (at least 2 characters).', 'error');
             displayNameInput.focus();
             return false;
         }
+        console.log('✅ Display name validation passed');
         
+        console.log('🔍 Checking email presence...');
         if (!email) {
+            console.log('❌ Email is empty');
             showMessage('Please enter your email address.', 'error');
             emailInput.focus();
             return false;
         }
+        console.log('✅ Email is present');
         
+        console.log('🔍 Checking email format validation...');
         if (!validators.isValidEmail(email)) {
+            console.log('❌ Email format validation failed');
             showMessage('Please enter a valid email address.', 'error');
             emailInput.focus();
             return false;
         }
+        console.log('✅ Email format validation passed');
         
+        console.log('🔍 Checking phone presence...');
         if (!phone) {
+            console.log('❌ Phone is empty');
             showMessage('Please enter your phone number.', 'error');
             phoneInput.focus();
             setPhoneValidationState('error');
             return false;
         }
+        console.log('✅ Phone is present');
         
+        console.log('🔍 Checking phone format validation...');
         if (!validators.isValidPhone()) {
+            console.log('❌ Phone format validation failed');
             showMessage('Please enter a valid phone number for the selected country.', 'error');
             phoneInput.focus();
             setPhoneValidationState('error');
             return false;
         }
+        console.log('✅ Phone format validation passed');
         
+        console.log('🔍 Checking password validation...');
         if (!validators.isValidPassword(password)) {
+            console.log('❌ Password validation failed');
             showMessage('Password must be at least 8 characters long.', 'error');
             passwordInput.focus();
             return false;
         }
+        console.log('✅ Password validation passed');
         
+        console.log('🔍 Checking confirm password presence...');
         if (!confirmPassword) {
+            console.log('❌ Confirm password is empty');
             showMessage('Please confirm your password.', 'error');
             confirmPasswordInput.focus();
             return false;
         }
+        console.log('✅ Confirm password is present');
         
+        console.log('🔍 Checking password match...');
         if (!validators.passwordsMatch(password, confirmPassword)) {
+            console.log('❌ Passwords do not match');
             showMessage('Passwords do not match. Please check and try again.', 'error');
             confirmPasswordInput.focus();
             return false;
         }
+        console.log('✅ Password match validation passed');
         
         // Set success state for phone if validation passes
         setPhoneValidationState('success');
         
+        console.log('✅ All validations passed!');
         return true;
     }
     

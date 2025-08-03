@@ -497,7 +497,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     data: {
                         full_name: formData.fullName,
                         display_name: formData.displayName,
-                        phone: formData.phone // Changed from phone_number to phone to match database column
+                        phone_number: formData.phone // Changed to phone_number to match database column
                     }
                 }
             });
@@ -521,7 +521,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('📋 User metadata sent:', {
                     full_name: formData.fullName,
                     display_name: formData.displayName,
-                    phone: formData.phone
+                    phone_number: formData.phone
                 });
                 
                 // Show success message without waiting for profile creation

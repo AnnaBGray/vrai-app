@@ -102,7 +102,22 @@ async function fetchAuthenticationRequests() {
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Admin API call failed: ${response.status} ${response.statusText}`);
+                    // Try to get more detailed error information
+                    let errorDetails = '';
+                    try {
+                        const errorResponse = await response.json();
+                        errorDetails = JSON.stringify(errorResponse);
+                    } catch (e) {
+                        errorDetails = await response.text();
+                    }
+                    
+                    console.error('[DASHBOARD] Admin API call failed:', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        details: errorDetails
+                    });
+                    
+                    throw new Error(`Admin API call failed: ${response.status} ${response.statusText}. Details: ${errorDetails}`);
                 }
 
                 const result = await response.json();
@@ -126,26 +141,26 @@ async function fetchAuthenticationRequests() {
                 console.error('[DASHBOARD] Admin API call failed, falling back to direct Supabase query:', apiError);
                 
                 // Fallback to direct Supabase query (may be limited by RLS)
-                const { data: allRequests, error: adminError } = await supabaseClient
-                    .from('authentication_requests')
-                    .select('id, model_name, status, created_at, updated_at, human_readable_id, user_email')
-                    .order('updated_at', { ascending: false });
-                    
-                if (adminError) {
-                    console.error('[DASHBOARD] Error fetching admin authentication requests:', adminError);
-                    throw adminError;
-                }
+            const { data: allRequests, error: adminError } = await supabaseClient
+                .from('authentication_requests')
+                .select('id, model_name, status, created_at, updated_at, human_readable_id, user_email')
+                .order('updated_at', { ascending: false });
                 
+            if (adminError) {
+                console.error('[DASHBOARD] Error fetching admin authentication requests:', adminError);
+                throw adminError;
+            }
+            
                 console.log('[DASHBOARD] Fetched admin authentication requests (fallback):', allRequests?.length || 0);
-                
-                // For display in the Recent Activity section, limit to 5 most recent
-                const recentRequests = allRequests ? allRequests.slice(0, 5) : [];
-                
-                // Return all requests for statistics, but only show 5 most recent in the UI
-                return {
-                    all: allRequests || [],
-                    recent: recentRequests
-                };
+            
+            // For display in the Recent Activity section, limit to 5 most recent
+            const recentRequests = allRequests ? allRequests.slice(0, 5) : [];
+            
+            // Return all requests for statistics, but only show 5 most recent in the UI
+            return {
+                all: allRequests || [],
+                recent: recentRequests
+            };
             }
             
         } else {

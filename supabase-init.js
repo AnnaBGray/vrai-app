@@ -11,10 +11,21 @@ if (typeof window !== 'undefined') {
         try {
             console.log('✓ Supabase library found, initializing client...');
             
+            // Get Supabase URL and anon key from environment variables or data attributes
+            const supabaseUrl = 
+                window.NEXT_PUBLIC_SUPABASE_URL || 
+                document.querySelector('meta[name="supabase-url"]')?.getAttribute('content') || 
+                'https://gyxakkxotjkdsjvbufiv.supabase.co';
+            
+            const supabaseAnonKey = 
+                window.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
+                document.querySelector('meta[name="supabase-anon-key"]')?.getAttribute('content') || 
+                'sb_publishable_Ba2TDqOIk3p5jSMkEgzPWg_RmkoWrTx';
+            
             // Create and expose the Supabase client globally
             window.supabaseClient = window.supabase.createClient(
-                'https://gyxakkxotjkdsjvbufiv.supabase.co',
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5eGFra3hvdGprZHNqdmJ1Zml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMjc1MTMsImV4cCI6MjA2NzcwMzUxM30.RT0VJKgdYSUJXzA34diTOpCvenMT6qjMfHaLmCAvEpk'
+                supabaseUrl,
+                supabaseAnonKey
             );
             
             // Test the client with a simple query

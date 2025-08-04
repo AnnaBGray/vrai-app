@@ -12,8 +12,13 @@ const { createClient } = require('@supabase/supabase-js');
 const router = express.Router();
 
 // Initialize Supabase with service role for admin operations
-const supabaseUrl = 'https://gyxakkxotjkdsjvbufiv.supabase.co';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gyxakkxotjkdsjvbufiv.supabase.co';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Check if service role key is available
+if (!supabaseServiceKey) {
+    console.error('❌ SUPABASE_SERVICE_ROLE_KEY environment variable is not set! Admin operations will fail.');
+}
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -101,6 +106,14 @@ router.get('/authentication-requests', async (req, res) => {
     try {
         console.log('Admin requesting all authentication requests...');
         
+        // Check if service role key is available
+        if (!supabaseServiceKey) {
+            return res.status(500).json({ 
+                error: 'Server configuration error', 
+                message: 'SUPABASE_SERVICE_ROLE_KEY is not set in environment variables'
+            });
+        }
+        
         const { data: requests, error } = await supabaseAdmin
             .from('authentication_requests')
             .select(`
@@ -119,7 +132,7 @@ router.get('/authentication-requests', async (req, res) => {
         
         if (error) {
             console.error('Error fetching authentication requests:', error);
-            return res.status(500).json({ error: 'Failed to fetch authentication requests' });
+            return res.status(500).json({ error: 'Failed to fetch authentication requests', details: error });
         }
         
         console.log(`Successfully fetched ${requests?.length || 0} authentication requests for admin`);
@@ -130,6 +143,25 @@ router.get('/authentication-requests', async (req, res) => {
         
     } catch (error) {
         console.error('Server error fetching authentication requests:', error);
+        return res.status(500).json({ error: `Server error: ${error.message}` });
+    }
+});
+
+// Debug endpoint to check admin API configuration
+router.get('/debug', async (req, res) => {
+    try {
+        // Return configuration info (without exposing the actual key)
+        return res.status(200).json({
+            success: true,
+            config: {
+                supabaseUrl: supabaseUrl,
+                serviceKeyConfigured: !!supabaseServiceKey,
+                serviceKeyLength: supabaseServiceKey ? supabaseServiceKey.length : 0,
+                environment: process.env.NODE_ENV || 'development'
+            }
+        });
+    } catch (error) {
+        console.error('Debug endpoint error:', error);
         return res.status(500).json({ error: `Server error: ${error.message}` });
     }
 });

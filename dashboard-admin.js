@@ -84,26 +84,39 @@ async function fetchAuthenticationRequests() {
         const currentPage = getCurrentPage();
         
         if (currentPage === 'admin') {
-            // For admin page, fetch ALL authentication requests for accurate statistics
-            // No limit on the query to ensure we get all records
-            const { data: allRequests, error: adminError } = await supabaseClient
-                .from('authentication_requests')
-                .select('id, model_name, status, created_at, updated_at, human_readable_id, user_email')
-                .order('updated_at', { ascending: false });
-                
-            if (adminError) {
-                console.error('[DASHBOARD] Error fetching admin authentication requests:', adminError);
-                throw adminError;
-            }
+            // For admin page, use the secure API endpoint that bypasses RLS
+            const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
             
-            console.log('[DASHBOARD] Fetched admin authentication requests:', allRequests?.length || 0);
+            if (sessionError || !session) {
+                throw new Error('No valid session found');
+            }
+
+            // Call the admin API endpoint with the user's session token
+            const response = await fetch('/api/admin-auth-requests', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('[DASHBOARD] Admin API error:', errorData);
+                throw new Error(errorData.error || 'Failed to fetch admin data');
+            }
+
+            const result = await response.json();
+            const allRequests = result.data || [];
+            
+            console.log('[DASHBOARD] Fetched admin authentication requests:', allRequests.length);
             
             // For display in the Recent Activity section, limit to 5 most recent
-            const recentRequests = allRequests ? allRequests.slice(0, 5) : [];
+            const recentRequests = allRequests.slice(0, 5);
             
             // Return all requests for statistics, but only show 5 most recent in the UI
             return {
-                all: allRequests || [],
+                all: allRequests,
                 recent: recentRequests
             };
             

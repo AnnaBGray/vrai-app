@@ -13,7 +13,7 @@ const router = express.Router();
 
 // Initialize Supabase with service role for admin operations
 const supabaseUrl = 'https://gyxakkxotjkdsjvbufiv.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'your_service_role_key_here';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5eGFra3hvdGprZHNqdmJ1Zml2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjEyNzUxMywiZXhwIjoyMDY3NzAzNTEzfQ.hnejpWaUOs0pKUwHQl_Yk1ulC5hBu8o7BcTWN-RFIaA';
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 

@@ -113,10 +113,10 @@ async function fetchAuthenticationRequests() {
                 const allRequests = result.data || [];
                 console.log('[DASHBOARD] Fetched admin authentication requests via API:', allRequests.length);
                 
-                // For display in the Recent Activity section, limit to 5 most recent
-                const recentRequests = allRequests.slice(0, 5);
+                // For admin page, show all requests in Recent Activity (no limit)
+                const recentRequests = allRequests;
                 
-                // Return all requests for statistics, but only show 5 most recent in the UI
+                // Return all requests for statistics and display
                 return {
                     all: allRequests,
                     recent: recentRequests
@@ -138,10 +138,10 @@ async function fetchAuthenticationRequests() {
                 
                 console.log('[DASHBOARD] Fetched admin authentication requests (fallback):', allRequests?.length || 0);
                 
-                // For display in the Recent Activity section, limit to 5 most recent
-                const recentRequests = allRequests ? allRequests.slice(0, 5) : [];
+                // For admin page, show all requests in Recent Activity (no limit)
+                const recentRequests = allRequests || [];
                 
-                // Return all requests for statistics, but only show 5 most recent in the UI
+                // Return all requests for statistics and display
                 return {
                     all: allRequests || [],
                     recent: recentRequests
@@ -244,8 +244,8 @@ function updateRecentActivity(requests) {
         return dateB - dateA; // Descending order (newest first)
     });
 
-    // Limit to 3 most recent entries for admin.html page
-    const limitedRequests = currentPage === 'admin' ? sortedRequests.slice(0, 3) : sortedRequests;
+    // For admin page, show all requests. For other pages, limit as needed
+    const limitedRequests = currentPage === 'admin' ? sortedRequests : sortedRequests.slice(0, 5);
 
     // Add each request as an activity item
     limitedRequests.forEach((request, index) => {
@@ -254,7 +254,7 @@ function updateRecentActivity(requests) {
     });
 
     console.log('[DASHBOARD] Updated Recent Activity with', limitedRequests.length, 'requests', 
-        currentPage === 'admin' ? '(limited to 3)' : '');
+        currentPage === 'admin' ? '(showing all)' : '(limited to 5)');
 }
 
 /**

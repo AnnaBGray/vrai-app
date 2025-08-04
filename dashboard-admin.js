@@ -515,7 +515,7 @@ function updateStatisticsCards(requests) {
         
         if (totalElement) totalElement.textContent = stats.total;
         if (pendingElement) pendingElement.textContent = stats.pending;
-        if (approvedElement) approvedElement.textContent = stats.processedTodayCount;
+        if (approvedElement) approvedElement.textContent = stats.authenticated; // FIXED: use authenticated count
         if (rejectedElement) rejectedElement.textContent = stats.rejected;
     }
 
@@ -536,6 +536,9 @@ function calculateStatistics(requests) {
     
     // Calculate rejected count
     const rejected = requests.filter(r => r.status === 'Rejected').length;
+    
+    // Calculate authenticated count (FIXED LOGIC)
+    const authenticated = requests.filter(r => r.status === 'Authenticated').length;
     
     // Calculate processed today count (includes Authenticated, Rejected, and Action Required)
     const today = new Date();
@@ -564,11 +567,12 @@ function calculateStatistics(requests) {
         pending, 
         processedTodayCount, 
         rejected, 
+        authenticated,
         activeUsers,
         uniqueEmails: Array.from(uniqueUsers)
     });
 
-    return { total, pending, processedTodayCount, rejected, activeUsers };
+    return { total, pending, processedTodayCount, rejected, authenticated, activeUsers };
 }
 
 /**

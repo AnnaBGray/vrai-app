@@ -5,9 +5,6 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
-// Import admin service routes
-const adminServiceRoutes = require('./admin-service');
-
 // Initialize Express app
 const app = express();
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -31,9 +28,6 @@ app.use(cors(corsOptions));
 // Body parsing middleware
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
-
-// Use admin service routes
-app.use('/api/admin', adminServiceRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -61,9 +55,7 @@ app.use('*', (req, res) => {
         message: `API endpoint ${req.path} not found`,
         availableEndpoints: [
             'GET /health',
-            'GET /test',
-            'GET /admin/authentication-requests',
-            'POST /admin/upload-pdf'
+            'GET /test'
         ]
     });
 });

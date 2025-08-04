@@ -105,18 +105,24 @@ async function fetchAuthenticationRequests() {
                     // Try to get more detailed error information
                     let errorDetails = '';
                     try {
-                        // Clone the response before reading it to avoid the "body stream already read" error
-                        const errorResponseClone = response.clone();
-                        const errorResponse = await errorResponseClone.json();
-                        errorDetails = JSON.stringify(errorResponse);
-                    } catch (e) {
+                        // Always clone the response before attempting to read it
+                        const responseClone = response.clone();
+                        
                         try {
-                            // If JSON parsing fails, try to get the text
-                            const textResponseClone = response.clone();
-                            errorDetails = await textResponseClone.text();
-                        } catch (textError) {
-                            errorDetails = 'Could not read error details: ' + (textError.message || 'Unknown error');
+                            // Try JSON first
+                            const errorJson = await responseClone.json();
+                            errorDetails = JSON.stringify(errorJson);
+                        } catch (jsonError) {
+                            // If JSON fails, try text
+                            const textClone = response.clone();
+                            try {
+                                errorDetails = await textClone.text();
+                            } catch (textError) {
+                                errorDetails = 'Could not read error details: ' + (textError.message || 'Unknown error');
+                            }
                         }
+                    } catch (e) {
+                        errorDetails = 'Error reading response: ' + (e.message || 'Unknown error');
                     }
                     
                     console.error('[DASHBOARD] Admin API call failed:', {

@@ -21,11 +21,26 @@ if (typeof window !== 'undefined') {
                 window.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
                 document.querySelector('meta[name="supabase-anon-key"]')?.getAttribute('content') || 
                 'sb_publishable_Ba2TDqOIk3p5jSMkEgzPWg_RmkoWrTx';
+
+            console.log('📝 Supabase Configuration:', {
+                url: supabaseUrl,
+                keyConfigured: !!supabaseAnonKey,
+                keyLength: supabaseAnonKey ? supabaseAnonKey.length : 0,
+                metaTag: !!document.querySelector('meta[name="supabase-url"]'),
+                metaKeyTag: !!document.querySelector('meta[name="supabase-anon-key"]')
+            });
             
             // Create and expose the Supabase client globally
             window.supabaseClient = window.supabase.createClient(
                 supabaseUrl,
-                supabaseAnonKey
+                supabaseAnonKey,
+                {
+                    auth: {
+                        autoRefreshToken: true,
+                        persistSession: true,
+                        detectSessionInUrl: true
+                    }
+                }
             );
             
             // Test the client with a simple query

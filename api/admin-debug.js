@@ -38,6 +38,17 @@ module.exports = async (req, res) => {
             }));
         }
         
+        // Log request info for debugging
+        console.log('Admin debug request received:', {
+            url: req.url,
+            method: req.method,
+            path: req.path || 'N/A',
+            headers: {
+                authorization: req.headers.authorization ? 'Present' : 'Missing',
+                contentType: req.headers['content-type']
+            }
+        });
+        
         // Create Supabase client with service role
         const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
         

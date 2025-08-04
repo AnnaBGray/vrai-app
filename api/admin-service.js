@@ -24,11 +24,32 @@ if (!supabaseServiceKey) {
 console.log('Supabase Admin Configuration:', {
     url: supabaseUrl,
     keyConfigured: !!supabaseServiceKey,
-    keyLength: supabaseServiceKey ? supabaseServiceKey.length : 0
+    keyLength: supabaseServiceKey ? supabaseServiceKey.length : 0,
+    env: process.env.NODE_ENV || 'development',
+    vercelEnv: process.env.VERCEL_ENV || 'unknown'
 });
 
 // Create Supabase client with service role
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false
+    }
+});
+
+// Test the Supabase connection
+supabaseAdmin.from('authentication_requests')
+    .select('count', { count: 'exact', head: true })
+    .then(({ data, error }) => {
+        if (error) {
+            console.error('❌ Supabase admin client test query failed:', error);
+        } else {
+            console.log('✅ Supabase admin client test query successful');
+        }
+    })
+    .catch(err => {
+        console.error('❌ Supabase admin client test query error:', err);
+    });
 
 // Configure multer for file uploads
 const uploadDir = path.join(__dirname, process.env.UPLOAD_DIR || 'uploads');

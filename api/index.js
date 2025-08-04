@@ -33,7 +33,7 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
 // Use admin service routes
-app.use('/admin', adminServiceRoutes);
+app.use('/api/admin', adminServiceRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

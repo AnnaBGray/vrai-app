@@ -266,8 +266,7 @@ function createActivityItem(request) {
                     ${iconHTML}
                 </div>
                 <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-900">${request.model_name || 'Unknown Model'}</p>
-                    <p class="text-sm text-[#6B7280] mt-0.5">${statusText}</p>
+                    <p class="text-sm font-medium text-gray-900">${statusText}</p>
                     <p class="text-xs text-gray-400 mt-1">${timeAgo}</p>
                 </div>
             </div>

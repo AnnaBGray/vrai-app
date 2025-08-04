@@ -4,6 +4,7 @@
     { "src": "api/test.js", "use": "@vercel/node" },
     { "src": "api/debug.js", "use": "@vercel/node" },
     { "src": "api/admin-debug.js", "use": "@vercel/node" },
+    { "src": "api/admin-simple.js", "use": "@vercel/node" },
     { "src": "api/index.js", "use": "@vercel/node" },
     { "src": "api/**/*.js", "use": "@vercel/node" },
     { "src": "*.html", "use": "@vercel/static" },
@@ -16,6 +17,7 @@
     { "src": "/debug", "dest": "/api/debug.js" },
     { "src": "/test", "dest": "/api/test.js" },
     { "src": "/api/admin-debug", "dest": "/api/admin-debug.js" },
+    { "src": "/api/admin-simple", "dest": "/api/admin-simple.js" },
     { "src": "/api/admin/(.*)", "dest": "/api/index.js" },
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/(.*)", "dest": "/$1" }

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="supabase-url" content="https://gyxakkxotjkdsjvbufiv.supabase.co">
+    <meta name="supabase-anon-key" content="sb_publishable_Ba2TDqOIk3p5jSMkEgzPWg_RmkoWrTx">
+    <title>Admin API Test - Vrai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-init.js"></script>
+</head>
+<body class="min-h-screen bg-gray-100 p-8">
+    <div class="max-w-3xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">Admin API Test</h1>
+        
+        <div class="space-y-6">
+            <!-- Test Controls -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-lg font-semibold mb-4">API Test Controls</h2>
+                <div class="space-y-4">
+                    <div>
+                        <button id="testDebugBtn" class="bg-blue-500 text-white px-4 py-2 rounded">
+                            Test Debug Endpoint
+                        </button>
+                        <button id="testSimpleBtn" class="bg-green-500 text-white px-4 py-2 rounded ml-2">
+                            Test Simple Endpoint
+                        </button>
+                        <button id="testOriginalBtn" class="bg-purple-500 text-white px-4 py-2 rounded ml-2">
+                            Test Original Endpoint
+                        </button>
+                    </div>
+                    <div>
+                        <button id="clearBtn" class="bg-gray-500 text-white px-4 py-2 rounded">
+                            Clear Results
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Results Display -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-lg font-semibold mb-4">Results</h2>
+                <pre id="results" class="bg-gray-100 p-4 rounded overflow-auto max-h-96 text-sm">No results yet</pre>
+            </div>
+            
+            <!-- Auth Status -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-lg font-semibold mb-4">Auth Status</h2>
+                <div id="authStatus" class="text-sm">Checking auth status...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const resultsElement = document.getElementById('results');
+            const authStatusElement = document.getElementById('authStatus');
+            
+            // Check auth status
+            try {
+                const { data: { user, session }, error } = await supabaseClient.auth.getSession();
+                if (error) throw error;
+                
+                if (user) {
+                    // Get user profile to check if admin
+                    const { data: profile, error: profileError } = await supabaseClient
+                        .from('profiles')
+                        .select('is_admin, email, full_name')
+                        .eq('id', user.id)
+                        .single();
+                        
+                    if (profileError) throw profileError;
+                    
+                    authStatusElement.innerHTML = `
+                        <div class="text-green-600 font-medium">✅ Authenticated</div>
+                        <div class="mt-1">User: ${profile.email || user.email}</div>
+                        <div>Admin: ${profile.is_admin ? 'Yes' : 'No'}</div>
+                        <div class="mt-2 text-xs font-mono overflow-hidden text-ellipsis">Token: ${session.access_token.substring(0, 20)}...</div>
+                    `;
+                } else {
+                    authStatusElement.innerHTML = `
+                        <div class="text-red-600 font-medium">❌ Not authenticated</div>
+                        <div class="mt-1">Please log in to test admin endpoints</div>
+                    `;
+                }
+            } catch (error) {
+                authStatusElement.innerHTML = `
+                    <div class="text-red-600 font-medium">❌ Auth error</div>
+                    <div class="mt-1">${error.message}</div>
+                `;
+            }
+            
+            // Test debug endpoint
+            document.getElementById('testDebugBtn').addEventListener('click', async () => {
+                resultsElement.textContent = 'Loading...';
+                
+                try {
+                    const response = await fetch('/api/admin-debug');
+                    const data = await response.json();
+                    resultsElement.textContent = JSON.stringify(data, null, 2);
+                } catch (error) {
+                    resultsElement.textContent = `Error: ${error.message}`;
+                }
+            });
+            
+            // Test simple endpoint
+            document.getElementById('testSimpleBtn').addEventListener('click', async () => {
+                resultsElement.textContent = 'Loading...';
+                
+                try {
+                    // Get session for auth
+                    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+                    if (sessionError || !session) {
+                        throw new Error('No valid session found');
+                    }
+                    
+                    const response = await fetch('/api/admin-simple', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${session.access_token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    resultsElement.textContent = JSON.stringify(data, null, 2);
+                } catch (error) {
+                    resultsElement.textContent = `Error: ${error.message}`;
+                }
+            });
+            
+            // Test original endpoint
+            document.getElementById('testOriginalBtn').addEventListener('click', async () => {
+                resultsElement.textContent = 'Loading...';
+                
+                try {
+                    // Get session for auth
+                    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+                    if (sessionError || !session) {
+                        throw new Error('No valid session found');
+                    }
+                    
+                    const response = await fetch('/api/admin/authentication-requests', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${session.access_token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        const responseClone = response.clone();
+                        let errorText;
+                        try {
+                            const errorJson = await responseClone.json();
+                            errorText = JSON.stringify(errorJson, null, 2);
+                        } catch (e) {
+                            errorText = await response.text();
+                        }
+                        
+                        resultsElement.textContent = `Error ${response.status}: ${response.statusText}\n\n${errorText}`;
+                        return;
+                    }
+                    
+                    const data = await response.json();
+                    resultsElement.textContent = JSON.stringify(data, null, 2);
+                } catch (error) {
+                    resultsElement.textContent = `Error: ${error.message}`;
+                }
+            });
+            
+            // Clear results
+            document.getElementById('clearBtn').addEventListener('click', () => {
+                resultsElement.textContent = 'No results yet';
+            });
+        });
+    </script>
+</body>
+</html> 

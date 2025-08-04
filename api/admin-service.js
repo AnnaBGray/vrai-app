@@ -30,26 +30,45 @@ console.log('Supabase Admin Configuration:', {
 });
 
 // Create Supabase client with service role
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-        autoRefreshToken: false,
-        persistSession: false
-    }
-});
+let supabaseAdmin;
+try {
+    supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+            detectSessionInUrl: false
+        },
+        global: {
+            headers: {
+                'x-client-info': 'admin-service-api'
+            }
+        },
+        db: {
+            schema: 'public'
+        }
+    });
+    
+    console.log('✅ Supabase admin client initialized');
+} catch (initError) {
+    console.error('❌ Failed to initialize Supabase admin client:', initError);
+    // We'll continue and let individual requests fail if the client isn't properly initialized
+}
 
 // Test the Supabase connection
-supabaseAdmin.from('authentication_requests')
-    .select('count', { count: 'exact', head: true })
-    .then(({ data, error }) => {
-        if (error) {
-            console.error('❌ Supabase admin client test query failed:', error);
-        } else {
-            console.log('✅ Supabase admin client test query successful');
-        }
-    })
-    .catch(err => {
-        console.error('❌ Supabase admin client test query error:', err);
-    });
+if (supabaseAdmin) {
+    supabaseAdmin.from('authentication_requests')
+        .select('count', { count: 'exact', head: true })
+        .then(({ data, error, count }) => {
+            if (error) {
+                console.error('❌ Supabase admin client test query failed:', error);
+            } else {
+                console.log(`✅ Supabase admin client test query successful. Count: ${count}`);
+            }
+        })
+        .catch(err => {
+            console.error('❌ Supabase admin client test query error:', err);
+        });
+}
 
 // Configure multer for file uploads
 const uploadDir = path.join(__dirname, process.env.UPLOAD_DIR || 'uploads');
@@ -96,34 +115,80 @@ async function verifyAdminAccess(req, res, next) {
             return res.status(401).json({ error: 'Unauthorized: No token provided' });
         }
         
+        console.log('Admin verification: Token received, length:', token.length);
+        
         // Verify the token and check if user is admin
-        const { data: userData, error: authError } = await supabaseAdmin.auth.getUser(token);
-        
-        if (authError || !userData) {
-            console.error('Auth error:', authError);
-            return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+        try {
+            const { data: userData, error: authError } = await supabaseAdmin.auth.getUser(token);
+            
+            if (authError) {
+                console.error('Auth error:', authError);
+                return res.status(401).json({ 
+                    error: 'Unauthorized: Invalid token',
+                    details: authError
+                });
+            }
+            
+            if (!userData || !userData.user) {
+                console.error('Auth error: No user data returned');
+                return res.status(401).json({ error: 'Unauthorized: User not found' });
+            }
+            
+            console.log('Admin verification: User found:', userData.user.id);
+            
+            // Check if user is admin by querying the profiles table
+            try {
+                const { data: profileData, error: profileError } = await supabaseAdmin
+                    .from('profiles')
+                    .select('is_admin')
+                    .eq('id', userData.user.id)
+                    .single();
+                
+                if (profileError) {
+                    console.error('Profile query error:', profileError);
+                    return res.status(500).json({ 
+                        error: 'Error checking admin status',
+                        details: profileError
+                    });
+                }
+                
+                if (!profileData) {
+                    console.error('User profile not found:', userData.user.id);
+                    return res.status(403).json({ error: 'Forbidden: User profile not found' });
+                }
+                
+                if (!profileData.is_admin) {
+                    console.error('User is not authorized as admin:', userData.user.id);
+                    return res.status(403).json({ error: 'Forbidden: User is not an admin' });
+                }
+                
+                console.log('Admin verification: User is admin:', userData.user.id);
+                
+                // Add user info to request for use in route handlers
+                req.user = userData.user;
+                req.isAdmin = true;
+                
+                next();
+            } catch (profileQueryError) {
+                console.error('Error during profile query:', profileQueryError);
+                return res.status(500).json({ 
+                    error: 'Error checking admin status',
+                    message: profileQueryError.message
+                });
+            }
+        } catch (authVerifyError) {
+            console.error('Error during auth verification:', authVerifyError);
+            return res.status(500).json({ 
+                error: 'Error verifying authentication',
+                message: authVerifyError.message
+            });
         }
-        
-        // Check if user is admin by querying the profiles table
-        const { data: profileData, error: profileError } = await supabaseAdmin
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', userData.user.id)
-            .single();
-        
-        if (profileError || !profileData || !profileData.is_admin) {
-            console.error('User is not authorized as admin:', userData.user.id);
-            return res.status(403).json({ error: 'Forbidden: User is not authorized for this operation' });
-        }
-        
-        // Add user info to request for use in route handlers
-        req.user = userData.user;
-        req.isAdmin = true;
-        
-        next();
     } catch (error) {
         console.error('Admin verification error:', error);
-        res.status(500).json({ error: 'Internal server error during admin verification' });
+        res.status(500).json({ 
+            error: 'Internal server error during admin verification',
+            message: error.message
+        });
     }
 }
 
@@ -144,12 +209,44 @@ router.get('/authentication-requests', async (req, res) => {
             });
         }
         
-        // Log the request headers for debugging (without exposing sensitive info)
-        console.log('Request headers:', {
-            authorization: req.headers.authorization ? 'Present' : 'Missing',
-            contentType: req.headers['content-type']
+        // Log the request info for debugging
+        console.log('Request info:', {
+            url: req.url,
+            method: req.method,
+            path: req.path,
+            userId: req.user?.id || 'unknown',
+            headers: {
+                authorization: req.headers.authorization ? 'Present' : 'Missing',
+                contentType: req.headers['content-type']
+            }
         });
         
+        // Use a simpler query first to test connection
+        console.log('Testing Supabase connection with count query...');
+        try {
+            const { count, error: countError } = await supabaseAdmin
+                .from('authentication_requests')
+                .select('*', { count: 'exact', head: true });
+                
+            if (countError) {
+                console.error('Error testing Supabase connection:', countError);
+                return res.status(500).json({ 
+                    error: 'Failed to connect to database', 
+                    details: countError
+                });
+            }
+            
+            console.log(`Connection test successful. Total records: ${count}`);
+        } catch (testError) {
+            console.error('Exception during connection test:', testError);
+            return res.status(500).json({ 
+                error: 'Exception during database connection test', 
+                message: testError.message
+            });
+        }
+        
+        // Proceed with the main query
+        console.log('Fetching authentication requests...');
         try {
             const { data: requests, error, status } = await supabaseAdmin
                 .from('authentication_requests')
@@ -190,7 +287,6 @@ router.get('/authentication-requests', async (req, res) => {
                 message: supabaseError.message
             });
         }
-        
     } catch (error) {
         console.error('Server error fetching authentication requests:', error);
         return res.status(500).json({ error: `Server error: ${error.message}` });

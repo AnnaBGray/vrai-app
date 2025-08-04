@@ -50,35 +50,53 @@ module.exports = async (req, res) => {
         });
         
         // Create Supabase client with service role
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            }
+        });
         
-        // Test query to authentication_requests table
-        const { data, error, status, statusText } = await supabaseAdmin
+        // Simple test query - just count records
+        const countResult = await supabaseAdmin
             .from('authentication_requests')
             .select('count', { count: 'exact', head: true });
+            
+        // More detailed test - fetch a single record
+        const singleRecordResult = await supabaseAdmin
+            .from('authentication_requests')
+            .select('id, model_name, status')
+            .limit(1)
+            .maybeSingle();
         
-        // Get all available tables for debugging
-        const { data: tables, error: tablesError } = await supabaseAdmin
-            .from('pg_tables')
-            .select('schemaname, tablename')
-            .eq('schemaname', 'public');
+        // Test if we can get the schema
+        const schemaResult = await supabaseAdmin.rpc('get_schema_info', {
+            table_name: 'authentication_requests'
+        }).catch(e => ({ error: e.message }));
         
         // Return results
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
         return res.end(JSON.stringify({
-            success: !error,
-            status: status,
-            statusText: statusText,
+            success: !countResult.error,
+            status: countResult.status,
+            statusText: countResult.statusText,
             config: {
                 supabaseUrl: supabaseUrl,
                 serviceKeyConfigured: !!supabaseServiceKey,
                 serviceKeyLength: supabaseServiceKey ? supabaseServiceKey.length : 0,
                 serviceKeyPrefix: supabaseServiceKey ? supabaseServiceKey.substring(0, 10) + '...' : 'N/A'
             },
-            error: error,
-            data: data,
-            tables: tablesError ? { error: tablesError } : tables,
+            countResult: {
+                error: countResult.error,
+                data: countResult.data,
+                count: countResult.count
+            },
+            singleRecordResult: {
+                error: singleRecordResult.error,
+                data: singleRecordResult.data
+            },
+            schemaResult: schemaResult,
             timestamp: new Date().toISOString(),
             env: {
                 NODE_ENV: process.env.NODE_ENV || 'development',

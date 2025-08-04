@@ -256,7 +256,7 @@ function createActivityItem(request) {
         div.className = 'p-6';
         
         const timeAgo = getTimeAgo(request.updated_at || request.created_at);
-        const statusText = getStatusText(request.status);
+        const statusText = getStatusText(request.status, request.model_name);
         const iconHTML = getStatusIcon(request.status);
         const iconBackground = getStatusIconBackground(request.status);
         

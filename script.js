@@ -132,7 +132,26 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(({ data, error }) => {
                 if (error) {
                     console.error('Error fetching user profile:', error);
-                    window.location.href = 'dashboard.html';
+                    
+                    // If the profile doesn't exist yet, try to create it
+                    if (typeof createProfileIfNeeded === 'function') {
+                        console.log('Attempting to create profile during redirect...');
+                        createProfileIfNeeded(supabase, user)
+                            .then(({ data: profileData, error: profileError }) => {
+                                if (profileError) {
+                                    console.error('Failed to create profile during redirect:', profileError);
+                                    // Default to regular dashboard
+                                    window.location.href = 'dashboard.html';
+                                } else if (profileData) {
+                                    console.log('Profile created during redirect, refreshing...');
+                                    // Refresh the page to try again with the new profile
+                                    window.location.reload();
+                                }
+                            });
+                    } else {
+                        // Default to regular dashboard if profile fetch fails
+                        window.location.href = 'dashboard.html';
+                    }
                     return;
                 }
                 
@@ -151,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // If we're not already on the dashboard page, redirect
                 if (!window.location.href.includes(redirectPage)) {
                     window.location.href = redirectPage;
-    }
+                }
             })
             .catch(error => {
                 console.error('Error fetching user profile:', error);

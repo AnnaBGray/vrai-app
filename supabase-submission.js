@@ -142,7 +142,21 @@ async function finalizeSubmission(submissionId, modelName, photoUrls) {
             throw new Error('User not authenticated');
         }
 
-        // Step 1: Update auth_submissions status to "completed"
+        // Step 1: Get a unique human_readable_id from the database function
+        console.log('[SUBMISSION] Getting unique human_readable_id from database...');
+        
+        const { data: idData, error: idError } = await client
+            .rpc('generate_human_readable_id');
+            
+        if (idError) {
+            console.error('[SUBMISSION] Error getting human_readable_id:', idError);
+            throw new Error('Failed to generate unique ID');
+        }
+        
+        const human_readable_id = idData;
+        console.log('[SUBMISSION] Generated human_readable_id:', human_readable_id);
+
+        // Step 2: Update auth_submissions status to "completed"
         const { error: updateError } = await client
             .from('auth_submissions')
             .update({ status: 'completed' })
@@ -156,7 +170,7 @@ async function finalizeSubmission(submissionId, modelName, photoUrls) {
 
         console.log('[SUBMISSION] Updated submission status to completed');
 
-        // Step 2: Insert new record into authentication_requests
+        // Step 3: Insert new record into authentication_requests with the generated ID
         const { data: request, error: insertError } = await client
             .from('authentication_requests')
             .insert({
@@ -165,7 +179,8 @@ async function finalizeSubmission(submissionId, modelName, photoUrls) {
                 photo_urls: photoUrls,
                 status: 'Pending Review',
                 user_id: user.id,
-                user_email: user.email
+                user_email: user.email,
+                human_readable_id: human_readable_id
             })
             .select('*')
             .single();

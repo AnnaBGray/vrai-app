@@ -33,7 +33,8 @@ module.exports = async (req, res) => {
             res.statusCode = 500;
             return res.end(JSON.stringify({
                 error: 'Server configuration error',
-                message: 'SUPABASE_SERVICE_ROLE_KEY is not set in environment variables'
+                message: 'SUPABASE_SERVICE_ROLE_KEY is not set in environment variables',
+                env_keys: Object.keys(process.env).filter(key => key.includes('SUPABASE') || key.includes('NEXT_PUBLIC'))
             }));
         }
         
@@ -41,9 +42,15 @@ module.exports = async (req, res) => {
         const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
         
         // Test query to authentication_requests table
-        const { data, error, status } = await supabaseAdmin
+        const { data, error, status, statusText } = await supabaseAdmin
             .from('authentication_requests')
             .select('count', { count: 'exact', head: true });
+        
+        // Get all available tables for debugging
+        const { data: tables, error: tablesError } = await supabaseAdmin
+            .from('pg_tables')
+            .select('schemaname, tablename')
+            .eq('schemaname', 'public');
         
         // Return results
         res.statusCode = 200;
@@ -51,17 +58,21 @@ module.exports = async (req, res) => {
         return res.end(JSON.stringify({
             success: !error,
             status: status,
+            statusText: statusText,
             config: {
                 supabaseUrl: supabaseUrl,
                 serviceKeyConfigured: !!supabaseServiceKey,
-                serviceKeyLength: supabaseServiceKey ? supabaseServiceKey.length : 0
+                serviceKeyLength: supabaseServiceKey ? supabaseServiceKey.length : 0,
+                serviceKeyPrefix: supabaseServiceKey ? supabaseServiceKey.substring(0, 10) + '...' : 'N/A'
             },
             error: error,
             data: data,
+            tables: tablesError ? { error: tablesError } : tables,
             timestamp: new Date().toISOString(),
             env: {
                 NODE_ENV: process.env.NODE_ENV || 'development',
-                VERCEL_ENV: process.env.VERCEL_ENV || 'unknown'
+                VERCEL_ENV: process.env.VERCEL_ENV || 'unknown',
+                env_keys: Object.keys(process.env).filter(key => key.includes('SUPABASE') || key.includes('NEXT_PUBLIC'))
             }
         }));
         
@@ -70,7 +81,8 @@ module.exports = async (req, res) => {
         res.statusCode = 500;
         return res.end(JSON.stringify({
             error: 'Server error',
-            message: error.message
+            message: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         }));
     }
 }; 

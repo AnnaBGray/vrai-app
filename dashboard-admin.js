@@ -105,10 +105,18 @@ async function fetchAuthenticationRequests() {
                     // Try to get more detailed error information
                     let errorDetails = '';
                     try {
-                        const errorResponse = await response.json();
+                        // Clone the response before reading it to avoid the "body stream already read" error
+                        const errorResponseClone = response.clone();
+                        const errorResponse = await errorResponseClone.json();
                         errorDetails = JSON.stringify(errorResponse);
                     } catch (e) {
-                        errorDetails = await response.text();
+                        try {
+                            // If JSON parsing fails, try to get the text
+                            const textResponseClone = response.clone();
+                            errorDetails = await textResponseClone.text();
+                        } catch (textError) {
+                            errorDetails = 'Could not read error details: ' + (textError.message || 'Unknown error');
+                        }
                     }
                     
                     console.error('[DASHBOARD] Admin API call failed:', {

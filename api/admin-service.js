@@ -17,9 +17,17 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Check if service role key is available
 if (!supabaseServiceKey) {
-    console.error('❌ SUPABASE_SERVICE_ROLE_KEY environment variable is not set! Admin operations will fail.');
+    console.error('❌ CRITICAL ERROR: SUPABASE_SERVICE_ROLE_KEY environment variable is not set!');
 }
 
+// Log Supabase configuration (without exposing the actual key)
+console.log('Supabase Admin Configuration:', {
+    url: supabaseUrl,
+    keyConfigured: !!supabaseServiceKey,
+    keyLength: supabaseServiceKey ? supabaseServiceKey.length : 0
+});
+
+// Create Supabase client with service role
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 // Configure multer for file uploads
@@ -108,38 +116,59 @@ router.get('/authentication-requests', async (req, res) => {
         
         // Check if service role key is available
         if (!supabaseServiceKey) {
+            console.error('Missing SUPABASE_SERVICE_ROLE_KEY in environment variables');
             return res.status(500).json({ 
                 error: 'Server configuration error', 
                 message: 'SUPABASE_SERVICE_ROLE_KEY is not set in environment variables'
             });
         }
         
-        const { data: requests, error } = await supabaseAdmin
-            .from('authentication_requests')
-            .select(`
-                id,
-                model_name,
-                status,
-                created_at,
-                updated_at,
-                human_readable_id,
-                user_email,
-                submission_id,
-                admin_notes,
-                report_url
-            `)
-            .order('updated_at', { ascending: false });
-        
-        if (error) {
-            console.error('Error fetching authentication requests:', error);
-            return res.status(500).json({ error: 'Failed to fetch authentication requests', details: error });
-        }
-        
-        console.log(`Successfully fetched ${requests?.length || 0} authentication requests for admin`);
-        return res.status(200).json({ 
-            success: true, 
-            data: requests || [] 
+        // Log the request headers for debugging (without exposing sensitive info)
+        console.log('Request headers:', {
+            authorization: req.headers.authorization ? 'Present' : 'Missing',
+            contentType: req.headers['content-type']
         });
+        
+        try {
+            const { data: requests, error, status } = await supabaseAdmin
+                .from('authentication_requests')
+                .select(`
+                    id,
+                    model_name,
+                    status,
+                    created_at,
+                    updated_at,
+                    human_readable_id,
+                    user_email,
+                    submission_id,
+                    admin_notes,
+                    report_url
+                `)
+                .order('updated_at', { ascending: false });
+            
+            console.log('Supabase response status:', status);
+            
+            if (error) {
+                console.error('Error fetching authentication requests:', error);
+                return res.status(500).json({ 
+                    error: 'Failed to fetch authentication requests', 
+                    details: error,
+                    status: status
+                });
+            }
+            
+            console.log(`Successfully fetched ${requests?.length || 0} authentication requests for admin`);
+            return res.status(200).json({ 
+                success: true, 
+                data: requests || [] 
+            });
+        } catch (supabaseError) {
+            console.error('Supabase query error:', supabaseError);
+            return res.status(500).json({ 
+                error: 'Supabase query error', 
+                message: supabaseError.message
+            });
+        }
         
     } catch (error) {
         console.error('Server error fetching authentication requests:', error);

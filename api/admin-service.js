@@ -96,6 +96,44 @@ async function verifyAdminAccess(req, res, next) {
 // Apply admin verification to all routes
 router.use(verifyAdminAccess);
 
+// Get all authentication requests for admin dashboard
+router.get('/authentication-requests', async (req, res) => {
+    try {
+        console.log('Admin requesting all authentication requests...');
+        
+        const { data: requests, error } = await supabaseAdmin
+            .from('authentication_requests')
+            .select(`
+                id,
+                model_name,
+                status,
+                created_at,
+                updated_at,
+                human_readable_id,
+                user_email,
+                submission_id,
+                admin_notes,
+                report_url
+            `)
+            .order('updated_at', { ascending: false });
+        
+        if (error) {
+            console.error('Error fetching authentication requests:', error);
+            return res.status(500).json({ error: 'Failed to fetch authentication requests' });
+        }
+        
+        console.log(`Successfully fetched ${requests?.length || 0} authentication requests for admin`);
+        return res.status(200).json({ 
+            success: true, 
+            data: requests || [] 
+        });
+        
+    } catch (error) {
+        console.error('Server error fetching authentication requests:', error);
+        return res.status(500).json({ error: `Server error: ${error.message}` });
+    }
+});
+
 // Upload PDF report endpoint
 router.post('/upload-pdf', upload.single('pdfFile'), async (req, res) => {
     try {

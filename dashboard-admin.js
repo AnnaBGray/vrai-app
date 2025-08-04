@@ -84,41 +84,69 @@ async function fetchAuthenticationRequests() {
         const currentPage = getCurrentPage();
         
         if (currentPage === 'admin') {
-            // For admin page, use the secure API endpoint that bypasses RLS
-            const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-            
-            if (sessionError || !session) {
-                throw new Error('No valid session found');
-            }
-
-            // Call the admin API endpoint with the user's session token
-            const response = await fetch('/api/admin-auth-requests', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${session.access_token}`,
-                    'Content-Type': 'application/json'
+            // For admin page, fetch ALL authentication requests using admin API endpoint
+            try {
+                // Get current user's session token for admin API call
+                const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+                if (sessionError || !session) {
+                    throw new Error('No valid session found for admin API call');
                 }
-            });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('[DASHBOARD] Admin API error:', errorData);
-                throw new Error(errorData.error || 'Failed to fetch admin data');
+                // Call admin API endpoint to get all authentication requests
+                const response = await fetch('/api/admin/authentication-requests', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Admin API call failed: ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error('Admin API returned error: ' + (result.error || 'Unknown error'));
+                }
+
+                const allRequests = result.data || [];
+                console.log('[DASHBOARD] Fetched admin authentication requests via API:', allRequests.length);
+                
+                // For display in the Recent Activity section, limit to 5 most recent
+                const recentRequests = allRequests.slice(0, 5);
+                
+                // Return all requests for statistics, but only show 5 most recent in the UI
+                return {
+                    all: allRequests,
+                    recent: recentRequests
+                };
+                
+            } catch (apiError) {
+                console.error('[DASHBOARD] Admin API call failed, falling back to direct Supabase query:', apiError);
+                
+                // Fallback to direct Supabase query (may be limited by RLS)
+                const { data: allRequests, error: adminError } = await supabaseClient
+                    .from('authentication_requests')
+                    .select('id, model_name, status, created_at, updated_at, human_readable_id, user_email')
+                    .order('updated_at', { ascending: false });
+                    
+                if (adminError) {
+                    console.error('[DASHBOARD] Error fetching admin authentication requests:', adminError);
+                    throw adminError;
+                }
+                
+                console.log('[DASHBOARD] Fetched admin authentication requests (fallback):', allRequests?.length || 0);
+                
+                // For display in the Recent Activity section, limit to 5 most recent
+                const recentRequests = allRequests ? allRequests.slice(0, 5) : [];
+                
+                // Return all requests for statistics, but only show 5 most recent in the UI
+                return {
+                    all: allRequests || [],
+                    recent: recentRequests
+                };
             }
-
-            const result = await response.json();
-            const allRequests = result.data || [];
-            
-            console.log('[DASHBOARD] Fetched admin authentication requests:', allRequests.length);
-            
-            // For display in the Recent Activity section, limit to 5 most recent
-            const recentRequests = allRequests.slice(0, 5);
-            
-            // Return all requests for statistics, but only show 5 most recent in the UI
-            return {
-                all: allRequests,
-                recent: recentRequests
-            };
             
         } else {
             // For user dashboard, fetch only their requests

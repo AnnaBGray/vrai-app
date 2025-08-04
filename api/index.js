@@ -33,7 +33,7 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
 // Use admin service routes
-app.use('/api/admin', adminServiceRoutes);
+app.use('/admin', adminServiceRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -44,36 +44,26 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Serve static files
-app.get('/*', (req, res) => {
-    // For Vercel, we need to serve static files differently
-    const filePath = path.join(__dirname, '..', req.path);
-    
-    // Handle HTML files
-    if (req.path.endsWith('.html') || req.path === '/') {
-        const htmlPath = req.path === '/' ? '/index.html' : req.path;
-        res.sendFile(path.join(__dirname, '..', htmlPath));
-    } else {
-        // For other static files (CSS, JS, etc.)
-        res.sendFile(filePath);
-    }
+// Test endpoint
+app.get('/test', (req, res) => {
+    res.json({
+        message: 'API is working!',
+        timestamp: new Date().toISOString(),
+        method: req.method,
+        url: req.url
+    });
 });
 
 // 404 handler for undefined API routes
-app.use('/api/*', (req, res) => {
+app.use('*', (req, res) => {
     res.status(404).json({
         error: 'Not Found',
         message: `API endpoint ${req.path} not found`,
         availableEndpoints: [
-            'GET /api',
-            'POST /register',
-            'POST /login',
-            'GET /user/stats',
-            'GET /user/requests',
-            'POST /api/requests/:id/upload',
-            'POST /api/authentication-submission',
-            'GET /api/submissions',
-            'GET /health'
+            'GET /health',
+            'GET /test',
+            'GET /admin/authentication-requests',
+            'POST /admin/upload-pdf'
         ]
     });
 });
@@ -93,28 +83,17 @@ app.use((error, req, res, next) => {
 
 // Export for Vercel serverless function
 module.exports = (req, res) => {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.statusCode = 200;
-    return res.end();
-  }
-  
-  // Set content type for JSON response
-  res.setHeader('Content-Type', 'application/json');
-  
-  // Simple response for testing
-  const responseData = {
-    message: 'Vrai API is working!',
-    timestamp: new Date().toISOString(),
-    method: req.method,
-    url: req.url,
-    environment: process.env.NODE_ENV || 'development'
-  };
-  
-  return res.end(JSON.stringify(responseData, null, 2));
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        res.statusCode = 200;
+        return res.end();
+    }
+    
+    // Pass the request to Express app
+    return app(req, res);
 }; 

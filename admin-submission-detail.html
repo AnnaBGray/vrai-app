@@ -1496,11 +1496,38 @@
                         let currentY = imagesY + 10;
                         let imageIndex = 0;
                         
+                        // Helper function to validate image URL
+                        const isValidImageUrl = (url) => {
+                            if (!url || typeof url !== 'string') {
+                                console.warn('Invalid URL type:', typeof url, url);
+                                return false;
+                            }
+                            
+                            const trimmedUrl = url.trim();
+                            if (trimmedUrl === '' || trimmedUrl === 'undefined' || trimmedUrl === 'null') {
+                                console.warn('Empty or null URL:', trimmedUrl);
+                                return false;
+                            }
+                            
+                            if (!trimmedUrl.startsWith('https://')) {
+                                console.warn('URL does not start with https://:', trimmedUrl);
+                                return false;
+                            }
+                            
+                            try {
+                                new URL(trimmedUrl);
+                                return true;
+                            } catch (e) {
+                                console.warn('Invalid URL format:', trimmedUrl, e);
+                                return false;
+                            }
+                        };
+                        
                         // Helper function to fetch and convert image to base64
                         const getImageAsBase64 = async (url) => {
                           try {
                             const controller = new AbortController();
-                            const timeout = setTimeout(() => controller.abort(), 5000);
+                            const timeout = setTimeout(() => controller.abort(), 10000); // Increased timeout to 10s
                             const response = await fetch(url, { mode: 'cors', credentials: 'omit', signal: controller.signal });
                             clearTimeout(timeout);
 
@@ -1510,6 +1537,13 @@
                             }
 
                             const blob = await response.blob();
+                            
+                            // Check if blob is empty
+                            if (blob.size === 0) {
+                                console.error('Image blob is empty:', url);
+                                return null;
+                            }
+                            
                             return await new Promise((resolve, reject) => {
                               const reader = new FileReader();
                               reader.onloadend = () => resolve(reader.result);
@@ -1522,9 +1556,34 @@
                           }
                         };
                         
+                        // Helper function to add image placeholder
+                        const addImagePlaceholder = (x, y, size, label) => {
+                            doc.setDrawColor(200, 200, 200);
+                            doc.setFillColor(240, 240, 240);
+                            doc.rect(x, y, size, size, 'F');
+                            
+                            doc.setFontSize(8);
+                            doc.setTextColor(100, 100, 100);
+                            doc.text(label, x + size/2, y + size/2, { align: 'center' });
+                        };
+                        
+                        // Helper function to add image label
+                        const addImageLabel = (x, y, size, label) => {
+                            doc.setFontSize(8);
+                            doc.setTextColor(0, 0, 0);
+                            doc.text(label, x + size/2, y + size + 8, { align: 'center' });
+                        };
+                        
+                        // Flatten and filter photo URLs to handle nested arrays (step 10 photos)
+                        console.log('Original photo_urls:', reportData.photo_urls);
+                        const flattenedUrls = reportData.photo_urls.flat().filter(isValidImageUrl);
+                        console.log('Flattened and filtered URLs:', flattenedUrls);
+                        
+                        let failedImagesCount = 0;
+                        
                         // Process each image
-                        for (let i = 0; i < reportData.photo_urls.length; i++) {
-                            const imageUrl = reportData.photo_urls[i];
+                        for (let i = 0; i < flattenedUrls.length; i++) {
+                            const imageUrl = flattenedUrls[i];
                             console.log(`Fetching image ${i + 1}:`, imageUrl);
                             
                             // Check if we need a new row
@@ -1549,42 +1608,34 @@
                                     // Add the actual image
                                     doc.addImage(base64Image, 'JPEG', currentX, currentY, imageSize, imageSize);
                                 } else {
-                                    // Fallback to placeholder if image can't be loaded
-                                    doc.setDrawColor(200, 200, 200);
-                                    doc.setFillColor(240, 240, 240);
-                                    doc.rect(currentX, currentY, imageSize, imageSize, 'F');
-                                    
-                                    doc.setFontSize(8);
-                                    doc.setTextColor(100, 100, 100);
-                                    doc.text(`Image ${i + 1}`, currentX + imageSize/2, currentY + imageSize/2, { align: 'center' });
+                                    // Add placeholder for failed image
+                                    addImagePlaceholder(currentX, currentY, imageSize, `Image ${i + 1} failed to load`);
+                                    failedImagesCount++;
                                 }
                                 
                                 // Add label below image
-                                doc.setFontSize(8);
-                                doc.setTextColor(0, 0, 0);
-                                doc.text(`Image ${i + 1}`, currentX + imageSize/2, currentY + imageSize + 8, { align: 'center' });
+                                addImageLabel(currentX, currentY, imageSize, `Image ${i + 1}`);
                                 
                                 currentX += imageSize + margin;
                                 imageIndex++;
                             } catch (imgError) {
                                 console.error(`Error processing image ${i + 1}:`, imgError);
                                 // Add placeholder on error
-                                doc.setDrawColor(200, 200, 200);
-                                doc.setFillColor(240, 240, 240);
-                                doc.rect(currentX, currentY, imageSize, imageSize, 'F');
-                                
-                                doc.setFontSize(8);
-                                doc.setTextColor(100, 100, 100);
-                                doc.text(`Image ${i + 1}`, currentX + imageSize/2, currentY + imageSize/2, { align: 'center' });
-                                
-                                // Add label below image
-                                doc.setFontSize(8);
-                                doc.setTextColor(0, 0, 0);
-                                doc.text(`Image ${i + 1}`, currentX + imageSize/2, currentY + imageSize + 8, { align: 'center' });
+                                addImagePlaceholder(currentX, currentY, imageSize, `Image ${i + 1} failed to load`);
+                                addImageLabel(currentX, currentY, imageSize, `Image ${i + 1}`);
                                 
                                 currentX += imageSize + margin;
                                 imageIndex++;
+                                failedImagesCount++;
                             }
+                        }
+                        
+                        // Add summary note if some images failed
+                        if (failedImagesCount > 0) {
+                            const summaryY = currentY + imageSize + 20;
+                            doc.setFontSize(10);
+                            doc.setTextColor(150, 150, 150);
+                            doc.text(`Note: ${failedImagesCount} image(s) failed to load and are shown as placeholders.`, 20, summaryY, { maxWidth: 170 });
                         }
                     }
                     

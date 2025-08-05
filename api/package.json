@@ -8,6 +8,6 @@
     "pdf-lib": "^1.17.1",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.5.28",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^2.6.7"
   }
 } 

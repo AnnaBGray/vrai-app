@@ -1365,14 +1365,56 @@
                 formData.append('submissionId', reportData.id);
                 
                 // Use the server endpoint to handle the upload with service role
-                // FIXED: Changed from '/api/admin/upload-pdf' to '/api/upload-pdf'
-                const response = await fetch('/api/upload-pdf', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${sessionData.session.access_token}`
-                    },
-                    body: formData
-                });
+                // Try the test endpoint first to verify API routing is working
+                console.log('Testing API connectivity with test endpoint...');
+                try {
+                    const testResponse = await fetch('/api/upload-test');
+                    const testResult = await testResponse.text();
+                    console.log('Test API response:', testResponse.status, testResult);
+                } catch (testError) {
+                    console.error('Test API failed:', testError);
+                }
+                
+                // Try multiple endpoints in sequence until one works
+                let response;
+                let endpoints = [
+                    '/api/upload-pdf',
+                    '/api/upload-simple'
+                ];
+                
+                let lastError = null;
+                
+                for (const endpoint of endpoints) {
+                    try {
+                        console.log(`Trying endpoint: ${endpoint}...`);
+                        response = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${sessionData.session.access_token}`
+                            },
+                            body: formData
+                        });
+                        
+                        if (response.ok) {
+                            console.log(`Endpoint ${endpoint} succeeded!`);
+                            break; // Exit the loop if successful
+                        } else {
+                            const errorText = await response.text();
+                            console.error(`Endpoint ${endpoint} failed with status ${response.status}:`, errorText);
+                            lastError = new Error(`${endpoint} failed: ${response.status} ${response.statusText}`);
+                            // Continue to the next endpoint
+                        }
+                    } catch (fetchError) {
+                        console.error(`Fetch error with ${endpoint}:`, fetchError);
+                        lastError = fetchError;
+                        // Continue to the next endpoint
+                    }
+                }
+                
+                // If we've tried all endpoints and none worked, throw the last error
+                if (!response || !response.ok) {
+                    throw lastError || new Error('All upload endpoints failed');
+                }
                 
                 // IMPROVED: Better error handling for non-JSON responses
                 if (!response.ok) {

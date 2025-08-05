@@ -1365,7 +1365,7 @@
                 formData.append('submissionId', reportData.id);
                 
                 // Use the server endpoint to handle the upload with service role
-                const response = await fetch('/api/admin/upload-pdf', {
+                const response = await fetch('/api/upload-pdf', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${sessionData.session.access_token}`
@@ -1374,13 +1374,46 @@
                 });
                 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error('Server upload error:', errorData);
-                    throw new Error(errorData.error || 'Failed to upload PDF through server');
+                    console.error('Server upload failed with status:', response.status, response.statusText);
+                    
+                    // Try to get error details from response
+                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    try {
+                        const errorText = await response.text();
+                        console.error('Server error response:', errorText);
+                        
+                        // Try to parse as JSON if possible
+                        try {
+                            const errorData = JSON.parse(errorText);
+                            errorMessage = errorData.error || errorData.message || errorMessage;
+                        } catch (parseError) {
+                            // If it's not JSON, use the text as error message
+                            errorMessage = `Server error: ${errorText.substring(0, 100)}...`;
+                        }
+                    } catch (textError) {
+                        console.error('Could not read error response:', textError);
+                    }
+                    
+                    throw new Error(`Failed to upload PDF through server: ${errorMessage}`);
                 }
                 
-                const result = await response.json();
-                console.log('Server upload successful:', result);
+                let result;
+                try {
+                    const responseText = await response.text();
+                    console.log('Server response text:', responseText);
+                    
+                    // Try to parse as JSON
+                    try {
+                        result = JSON.parse(responseText);
+                        console.log('Server upload successful:', result);
+                    } catch (parseError) {
+                        console.error('Failed to parse server response as JSON:', parseError);
+                        throw new Error(`Server returned invalid JSON response: ${responseText.substring(0, 100)}...`);
+                    }
+                } catch (textError) {
+                    console.error('Failed to read server response:', textError);
+                    throw new Error('Failed to read server response');
+                }
                 
                 // Make sure we're returning the URL from the server response
                 if (!result.url) {

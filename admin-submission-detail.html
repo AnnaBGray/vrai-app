@@ -1365,6 +1365,7 @@
                 formData.append('submissionId', reportData.id);
                 
                 // Use the server endpoint to handle the upload with service role
+                // FIXED: Changed from '/api/admin/upload-pdf' to '/api/upload-pdf'
                 const response = await fetch('/api/upload-pdf', {
                     method: 'POST',
                     headers: {
@@ -1373,47 +1374,44 @@
                     body: formData
                 });
                 
+                // IMPROVED: Better error handling for non-JSON responses
                 if (!response.ok) {
-                    console.error('Server upload failed with status:', response.status, response.statusText);
-                    
-                    // Try to get error details from response
-                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
                     try {
+                        // Try to parse as JSON first
                         const errorText = await response.text();
-                        console.error('Server error response:', errorText);
+                        let errorMessage = `Server error: ${response.status} ${response.statusText}`;
                         
-                        // Try to parse as JSON if possible
                         try {
+                            // Attempt to parse the error text as JSON
                             const errorData = JSON.parse(errorText);
-                            errorMessage = errorData.error || errorData.message || errorMessage;
-                        } catch (parseError) {
-                            // If it's not JSON, use the text as error message
-                            errorMessage = `Server error: ${errorText.substring(0, 100)}...`;
+                            console.error('Server upload error:', errorData);
+                            errorMessage = errorData.error || errorMessage;
+                        } catch (jsonError) {
+                            // If not valid JSON, use the raw text
+                            console.error('Server upload error (non-JSON):', errorText);
+                            errorMessage += ` - ${errorText}`;
                         }
+                        
+                        throw new Error(errorMessage);
                     } catch (textError) {
-                        console.error('Could not read error response:', textError);
+                        throw new Error(`Failed to upload PDF: ${response.status} ${response.statusText}`);
                     }
-                    
-                    throw new Error(`Failed to upload PDF through server: ${errorMessage}`);
                 }
                 
+                // Clone the response before reading it
+                const responseClone = response.clone();
                 let result;
+                
                 try {
-                    const responseText = await response.text();
-                    console.log('Server response text:', responseText);
-                    
-                    // Try to parse as JSON
-                    try {
-                        result = JSON.parse(responseText);
-                        console.log('Server upload successful:', result);
-                    } catch (parseError) {
-                        console.error('Failed to parse server response as JSON:', parseError);
-                        throw new Error(`Server returned invalid JSON response: ${responseText.substring(0, 100)}...`);
-                    }
-                } catch (textError) {
-                    console.error('Failed to read server response:', textError);
-                    throw new Error('Failed to read server response');
+                    result = await response.json();
+                } catch (jsonError) {
+                    console.error('Error parsing JSON response:', jsonError);
+                    // Try to get the text from the cloned response
+                    const responseText = await responseClone.text();
+                    console.error('Response text:', responseText);
+                    throw new Error('Invalid JSON response from server: ' + jsonError.message);
                 }
+                console.log('Server upload successful:', result);
                 
                 // Make sure we're returning the URL from the server response
                 if (!result.url) {

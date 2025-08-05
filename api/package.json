@@ -4,10 +4,10 @@
   "main": "index.js",
   "dependencies": {
     "@supabase/supabase-js": "^2.50.5",
-    "formidable": "^3.5.1",
+    "formidable": "^2.1.2",
     "pdf-lib": "^1.17.1",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.5.28",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^3.3.2"
   }
 } 

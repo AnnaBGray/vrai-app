@@ -1,10 +1,19 @@
+// Use CommonJS require for compatibility with Vercel
 const { createClient } = require('@supabase/supabase-js');
 const formidable = require('formidable');
 const fs = require('fs');
-const { PDFDocument } = require('pdf-lib');
-const { jsPDF } = require('jspdf');
-require('jspdf-autotable');
+// PDF-related imports not needed on the server side
+// const { PDFDocument } = require('pdf-lib');
+// const { jsPDF } = require('jspdf');
+// require('jspdf-autotable');
 const fetch = require('node-fetch');
+
+// Disable body parsing, we'll handle it with formidable
+const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 // Initialize Supabase client with service role
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gyxakkxotjkdsjvbufiv.supabase.co';
@@ -13,7 +22,11 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 // Create Supabase client with service role for admin operations
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-module.exports = async (req, res) => {
+// Export the config for Next.js API routes
+module.exports.config = config;
+
+// Export the handler function
+module.exports = async function handler(req, res) {
   // Only allow POST method
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });

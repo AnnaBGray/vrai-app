@@ -1369,7 +1369,10 @@
                     .from('reports')
                     .upload(fileName, pdfBlob, {
                         contentType: 'application/pdf',
-                        upsert: true
+                        upsert: true,
+                        metadata: {
+                            owner: sessionData.session.user.id
+                        }
                     });
                 
                 if (uploadError) {

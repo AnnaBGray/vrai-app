@@ -1359,13 +1359,7 @@
                 
                 console.log('Using authenticated session for user:', sessionData.session.user.id);
                 
-                // Prepare file name and path
-                
-                // Get user ID and add debugging
-                const userId = sessionData.session.user.id;
-                console.log("User ID for upload:", userId);
-                console.log("User ID type:", typeof userId);
-                console.log("User ID length:", userId.length);
+                // Prepare file name and path\n                \n                // Get user ID and add debugging\n                const userId = sessionData.session.user.id;\n                console.log("User ID for upload:", userId);\n                console.log("User ID type:", typeof userId);\n                console.log("User ID length:", userId.length);
                 const fileName = `report-${reportData.id}.pdf`;
                 console.log(`Uploading PDF directly to Supabase Storage as: ${fileName}`);
                 
@@ -1377,7 +1371,7 @@
                         contentType: 'application/pdf',
                         upsert: true,
                         metadata: {
-                            owner: userId.toString()
+                            owner: sessionData.session.user.id
                         }
                     });
                 
@@ -1540,7 +1534,7 @@
                         const getImageAsBase64 = async (url) => {
                           try {
                             const controller = new AbortController();
-                            const timeout = setTimeout(() => controller.abort(), 5000); // Optimized timeout to 5s
+                            const timeout = setTimeout(() => controller.abort(), 10000); // Increased timeout to 10s
                             const response = await fetch(url, { mode: 'cors', credentials: 'omit', signal: controller.signal });
                             clearTimeout(timeout);
 
@@ -1709,7 +1703,7 @@
     </script>
 
     <!-- Authentication Check -->
-    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-init.js"></script>
     <script src="supabase-auth.js"></script>
 </body>

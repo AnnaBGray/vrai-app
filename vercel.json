@@ -4,7 +4,11 @@
     { "src": "api/test.js", "use": "@vercel/node" },
     { "src": "api/debug.js", "use": "@vercel/node" },
     { "src": "api/index.js", "use": "@vercel/node" },
-    { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "api/upload-pdf.js", "use": "@vercel/node" },
+    { "src": "api/upload-test.js", "use": "@vercel/node" },
+    { "src": "api/upload-simple.js", "use": "@vercel/node" },
+    { "src": "api/create-profile.js", "use": "@vercel/node" },
+    { "src": "api/static.js", "use": "@vercel/node" },
     { "src": "*.html", "use": "@vercel/static" },
     { "src": "*.css", "use": "@vercel/static" },
     { "src": "*.js", "use": "@vercel/static" },
@@ -14,6 +18,9 @@
   "routes": [
     { "src": "/debug", "dest": "/api/debug.js" },
     { "src": "/test", "dest": "/api/test.js" },
+    { "src": "/api/upload-pdf", "dest": "/api/upload-pdf.js" },
+    { "src": "/api/upload-test", "dest": "/api/upload-test.js" },
+    { "src": "/api/upload-simple", "dest": "/api/upload-simple.js" },
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/(.*)", "dest": "/$1" }
   ]

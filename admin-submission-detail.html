@@ -1359,126 +1359,57 @@
                 
                 console.log('Using authenticated session for user:', sessionData.session.user.id);
                 
-                // Create form data for the file upload
-                const formData = new FormData();
-                formData.append('pdfFile', pdfBlob, `report-${reportData.id}.pdf`);
-                formData.append('submissionId', reportData.id);
+                // Prepare file name and path
+                const fileName = `report-${reportData.id}.pdf`;
+                console.log(`Uploading PDF directly to Supabase Storage as: ${fileName}`);
                 
-                // Use the server endpoint to handle the upload with service role
-                // Try the test endpoint first to verify API routing is working
-                console.log('Testing API connectivity with test endpoint...');
-                try {
-                    const testResponse = await fetch('/api/upload-test');
-                    const testResult = await testResponse.text();
-                    console.log('Test API response:', testResponse.status, testResult);
-                } catch (testError) {
-                    console.error('Test API failed:', testError);
+                // Upload directly to Supabase Storage from frontend
+                const { data: uploadData, error: uploadError } = await window.supabaseClient
+                    .storage
+                    .from('reports')
+                    .upload(fileName, pdfBlob, {
+                        contentType: 'application/pdf',
+                        upsert: true
+                    });
+                
+                if (uploadError) {
+                    console.error('Upload error:', uploadError);
+                    throw new Error(`Failed to upload PDF: ${uploadError.message}`);
                 }
                 
-                // Try multiple endpoints in sequence until one works
-                let response;
-                let endpoints = [
-                    '/api/upload-pdf',
-                    '/api/upload-simple'
-                ];
+                console.log('File uploaded successfully:', uploadData);
                 
-                let lastError = null;
+                // Get the public URL
+                const { data: urlData } = await window.supabaseClient
+                    .storage
+                    .from('reports')
+                    .getPublicUrl(fileName);
                 
-                for (const endpoint of endpoints) {
-                    try {
-                        console.log(`Trying endpoint: ${endpoint}...`);
-                        response = await fetch(endpoint, {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${sessionData.session.access_token}`
-                            },
-                            body: formData
-                        });
-                        
-                        if (response.ok) {
-                            console.log(`Endpoint ${endpoint} succeeded!`);
-                            break; // Exit the loop if successful
-                        } else {
-                            const errorText = await response.text();
-                            console.error(`Endpoint ${endpoint} failed with status ${response.status}:`, errorText);
-                            lastError = new Error(`${endpoint} failed: ${response.status} ${response.statusText}`);
-                            // Continue to the next endpoint
-                        }
-                    } catch (fetchError) {
-                        console.error(`Fetch error with ${endpoint}:`, fetchError);
-                        lastError = fetchError;
-                        // Continue to the next endpoint
-                    }
+                if (!urlData || !urlData.publicUrl) {
+                    throw new Error('Failed to get public URL for uploaded PDF');
                 }
                 
-                // If we've tried all endpoints and none worked, throw the last error
-                if (!response || !response.ok) {
-                    throw lastError || new Error('All upload endpoints failed');
-                }
+                const publicUrl = urlData.publicUrl;
+                console.log('Generated public URL:', publicUrl);
                 
-                // IMPROVED: Better error handling for non-JSON responses
-                if (!response.ok) {
-                    try {
-                        // Try to parse as JSON first
-                        const errorText = await response.text();
-                        let errorMessage = `Server error: ${response.status} ${response.statusText}`;
-                        
-                        try {
-                            // Attempt to parse the error text as JSON
-                            const errorData = JSON.parse(errorText);
-                            console.error('Server upload error:', errorData);
-                            errorMessage = errorData.error || errorMessage;
-                        } catch (jsonError) {
-                            // If not valid JSON, use the raw text
-                            console.error('Server upload error (non-JSON):', errorText);
-                            errorMessage += ` - ${errorText}`;
-                        }
-                        
-                        throw new Error(errorMessage);
-                    } catch (textError) {
-                        throw new Error(`Failed to upload PDF: ${response.status} ${response.statusText}`);
-                    }
-                }
-                
-                // Clone the response before reading it
-                const responseClone = response.clone();
-                let result;
-                
-                try {
-                    result = await response.json();
-                } catch (jsonError) {
-                    console.error('Error parsing JSON response:', jsonError);
-                    // Try to get the text from the cloned response
-                    const responseText = await responseClone.text();
-                    console.error('Response text:', responseText);
-                    throw new Error('Invalid JSON response from server: ' + jsonError.message);
-                }
-                console.log('Server upload successful:', result);
-                
-                // Make sure we're returning the URL from the server response
-                if (!result.url) {
-                    console.error('Server response missing URL:', result);
-                    throw new Error('Server response missing URL');
-                }
-                
-                // Validate the URL to ensure it's not the dummy URL
-                if (result.url.includes('example.com') || result.url.includes('dummy.pdf')) {
-                    console.error('Server returned invalid URL:', result.url);
-                    throw new Error('Server returned invalid URL instead of actual storage URL');
+                // Validate the URL to ensure it's not a dummy URL
+                if (publicUrl.includes('example.com') || publicUrl.includes('dummy.pdf')) {
+                    console.error('Invalid public URL generated:', publicUrl);
+                    throw new Error('Failed to generate valid public URL');
                 }
                 
                 // Ensure the URL is a valid Supabase Storage URL
-                if (!result.url.includes('storage.googleapis.com') && 
-                    !result.url.includes('supabase.co') && 
-                    !result.url.startsWith('https://')) {
-                    console.error('Server returned suspicious URL:', result.url);
-                    throw new Error('Server returned suspicious URL that does not appear to be a valid storage URL');
+                if (!publicUrl.includes('storage.googleapis.com') && 
+                    !publicUrl.includes('supabase.co') && 
+                    !publicUrl.startsWith('https://')) {
+                    console.error('Suspicious URL generated:', publicUrl);
+                    throw new Error('Generated URL does not appear to be a valid storage URL');
                 }
                 
-                console.log('Using PDF URL from server:', result.url);
+                console.log('Using PDF URL from Supabase Storage:', publicUrl);
                 
                 // Directly update the report_url in the database to ensure it's saved correctly
-                const updateResult = await updateReportUrl(reportData.id, result.url);
+                const updateResult = await updateReportUrl(reportData.id, publicUrl);
                 if (!updateResult.success) {
                     console.warn('Direct update of report_url failed:', updateResult.error);
                     // Continue anyway, as we'll return the URL and let processReview handle the update
@@ -1486,7 +1417,7 @@
                     console.log('Direct update of report_url succeeded');
                 }
                 
-                return result.url;
+                return publicUrl;
             } catch (error) {
                 console.error('Error generating and uploading PDF:', error);
                 throw new Error('Failed to generate and upload PDF: ' + error.message);

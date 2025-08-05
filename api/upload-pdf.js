@@ -1,17 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
-import formidable from 'formidable';
-import fs from 'fs';
-import { PDFDocument } from 'pdf-lib';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
-import fetch from 'node-fetch';
-
-// Disable body parsing, we'll handle it with formidable
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+const { createClient } = require('@supabase/supabase-js');
+const formidable = require('formidable');
+const fs = require('fs');
+const { PDFDocument } = require('pdf-lib');
+const { jsPDF } = require('jspdf');
+require('jspdf-autotable');
+const fetch = require('node-fetch');
 
 // Initialize Supabase client with service role
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gyxakkxotjkdsjvbufiv.supabase.co';
@@ -20,7 +13,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 // Create Supabase client with service role for admin operations
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   // Only allow POST method
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });

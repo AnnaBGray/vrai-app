@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (profileError) {
                                     console.error('Failed to create profile during redirect:', profileError);
                                     // Default to regular dashboard
-                                    window.location.href = 'index.html';
+                                    window.location.href = 'dashboard.html';
                                 } else if (profileData) {
                                     console.log('Profile created during redirect, refreshing...');
                                     // Refresh the page to try again with the new profile
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             });
                     } else {
                         // Default to regular dashboard if profile fetch fails
-                        window.location.href = 'index.html';
+                        window.location.href = 'dashboard.html';
                     }
                     return;
                 }
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.setItem('isAdmin', isAdmin ? 'true' : 'false');
                 
                 // Redirect to appropriate dashboard
-                const redirectPage = isAdmin ? 'dashboard-admin.html' : 'index.html';
+                const redirectPage = isAdmin ? 'dashboard-admin.html' : 'dashboard.html';
                 
                 // If we're not already on the dashboard page, redirect
                 if (!window.location.href.includes(redirectPage)) {
@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error fetching user profile:', error);
                 // Default to regular dashboard if profile fetch fails
-                window.location.href = 'index.html';
+                window.location.href = 'dashboard.html';
             });
     }
 

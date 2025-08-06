@@ -210,7 +210,7 @@
         // Navigate back to appropriate dashboard
         function goBackToDashboard() {
             const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
-            const dashboardPage = isAdmin ? 'dashboard-admin.html' : 'dashboard.html';
+            const dashboardPage = isAdmin ? 'dashboard-admin.html' : 'index.html';
             window.location.href = dashboardPage;
         }
 

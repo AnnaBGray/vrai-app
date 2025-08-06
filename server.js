@@ -748,7 +748,7 @@ app.post('/login', (req, res) => {
             email: user.email,
             displayName: user.displayName,
             isAdmin: user.isAdmin,
-            redirectTo: user.isAdmin ? 'dashboard-admin.html' : 'dashboard.html'
+            redirectTo: user.isAdmin ? 'dashboard-admin.html' : 'index.html'
         });
 
     } catch (error) {

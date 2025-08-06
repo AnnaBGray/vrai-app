@@ -107,7 +107,7 @@ function initializePageSafety() {
         const dashboardLinks = document.querySelectorAll('[id*="dashboard-link"], a[href*="dashboard"]');
         dashboardLinks.forEach(link => {
             if (link.href.includes('dashboard') && !link.href.includes('admin')) {
-                const correctDashboard = session.isAdmin ? 'dashboard-admin.html' : 'dashboard.html';
+                const correctDashboard = session.isAdmin ? 'dashboard-admin.html' : 'index.html';
                 link.href = correctDashboard;
             }
         });
@@ -129,7 +129,7 @@ function isAdminUser() {
 
 // Get proper dashboard URL
 function getDashboardUrl() {
-    return isAdminUser() ? 'dashboard-admin.html' : 'dashboard.html';
+    return isAdminUser() ? 'dashboard-admin.html' : 'index.html';
 }
 
 // Auto-initialize when DOM is ready

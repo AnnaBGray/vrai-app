@@ -61,7 +61,7 @@
             
             if (!isAdmin) {
                 console.log('Admin access required but user is not an admin');
-                window.location.href = 'dashboard.html'; // Redirect to regular dashboard
+                window.location.href = 'index.html'; // Redirect to regular dashboard
                 return;
             }
         }

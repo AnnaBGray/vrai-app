@@ -535,7 +535,7 @@
             // Set proper dashboard link based on admin status
             const dashboardLink = document.getElementById('dashboard-link');
             const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
-            dashboardLink.href = isAdmin ? 'dashboard-admin.html' : 'dashboard.html';
+            dashboardLink.href = isAdmin ? 'dashboard-admin.html' : 'index.html';
             
             // Show admin navigation item if user is admin
             const adminNavItem = document.getElementById('admin-nav-item');
@@ -550,7 +550,7 @@
                     return;
                 }
                 // Update href to ensure it's correct
-                this.href = sessionStorage.getItem('isAdmin') === 'true' ? 'dashboard-admin.html' : 'dashboard.html';
+                this.href = sessionStorage.getItem('isAdmin') === 'true' ? 'dashboard-admin.html' : 'index.html';
             });
             
             // Load user profile from Supabase

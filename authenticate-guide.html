@@ -34,7 +34,7 @@
         <!-- Header -->
         <div class="bg-white px-4 py-4 border-b border-gray-100">
             <div class="flex items-center justify-between mb-2">
-                <button onclick="window.location.href='dashboard.html'" class="flex items-center justify-center w-10 h-10 rounded-lg">
+                <button onclick="window.location.href='index.html'" class="flex items-center justify-center w-10 h-10 rounded-lg">
                     <svg class="w-6 h-6 text-gray-600" viewBox="0 0 24 24" fill="none">
                         <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
@@ -235,7 +235,7 @@
             // Set proper dashboard link based on admin status
             const dashboardLink = document.getElementById('dashboard-link');
             const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
-            dashboardLink.href = isAdmin ? 'dashboard-admin.html' : 'dashboard.html';
+            dashboardLink.href = isAdmin ? 'dashboard-admin.html' : 'index.html';
             
             // Show admin navigation item if user is admin
             const adminNavItem = document.getElementById('admin-nav-item');
@@ -252,7 +252,7 @@
             });
 
             // Update the back button to go to the correct dashboard
-            const backButton = document.querySelector('button[onclick*="dashboard.html"]');
+            const backButton = document.querySelector('button[onclick*="index.html"]');
             if (backButton && isAdmin) {
                 backButton.setAttribute('onclick', "window.location.href='dashboard-admin.html'");
             }

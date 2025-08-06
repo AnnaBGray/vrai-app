@@ -48,7 +48,7 @@
                 .then(({ data, error }) => {
                     if (error) {
                         console.error('Error fetching user profile:', error);
-                        window.location.href = 'dashboard.html';
+                        window.location.href = 'index.html';
                         return;
                     }
                     
@@ -62,7 +62,7 @@
                     localStorage.setItem('isAdmin', isAdmin ? 'true' : 'false');
                     
                     // Redirect to appropriate dashboard
-                    window.location.href = isAdmin ? 'dashboard-admin.html' : 'dashboard.html';
+                    window.location.href = isAdmin ? 'dashboard-admin.html' : 'index.html';
                 });
         }
         

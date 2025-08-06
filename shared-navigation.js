@@ -30,7 +30,7 @@ class NavigationManager {
      * Get the appropriate dashboard URL based on admin status
      */
     getDashboardUrl() {
-        return this.isAdmin ? 'dashboard-admin.html' : 'dashboard.html';
+        return this.isAdmin ? 'dashboard-admin.html' : 'index.html';
     }
 
     /**

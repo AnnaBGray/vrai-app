@@ -119,50 +119,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 
-    // Function to track login activity
-    async function trackLoginActivity(userId) {
-        try {
-            console.log('📊 Tracking login activity for user:', userId);
-            
-            // Get user's IP address
-            const ipResponse = await fetch('https://ipinfo.io/json');
-            if (!ipResponse.ok) {
-                throw new Error('Failed to fetch IP address');
-            }
-            const ipData = await ipResponse.json();
-            const ipAddress = ipData.ip || 'Unknown';
-            
-            console.log('📍 IP Address:', ipAddress);
-            
-            // Get browser user agent
-            const userAgent = navigator.userAgent;
-            console.log('🌐 User Agent:', userAgent);
-            
-            // Insert new record into login_activity table
-            const { error } = await supabase
-                .from('login_activity')
-                .insert({
-                    user_id: userId,
-                    ip_address: ipAddress,
-                    user_agent: userAgent,
-                    status: 'This device'
-                });
-            
-            if (error) {
-                console.error('❌ Failed to insert login activity:', error);
-                // Don't throw error here as we still want to redirect
-            } else {
-                console.log('✅ Login activity tracked successfully');
-            }
-            
-        } catch (error) {
-            console.error('❌ Error tracking login activity:', error);
-            // Don't throw error here as we still want to redirect
-        }
-    }
-
     // Function to redirect user to appropriate dashboard
-    async function redirectToDashboard(user) {
+    function redirectToDashboard(user) {
         if (!supabase) return;
         
         // Get user profile from profiles table
@@ -192,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             });
                     } else {
                         // Default to regular dashboard if profile fetch fails
-                        window.location.href = 'dashboard.html';
+                    window.location.href = 'dashboard.html';
                     }
                     return;
                 }
@@ -206,16 +164,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.setItem('displayName', displayName);
                 localStorage.setItem('isAdmin', isAdmin ? 'true' : 'false');
                 
-                // Track login activity
-                await trackLoginActivity(user.id);
-                
                 // Redirect to appropriate dashboard
                 const redirectPage = isAdmin ? 'dashboard-admin.html' : 'dashboard.html';
                 
                 // If we're not already on the dashboard page, redirect
                 if (!window.location.href.includes(redirectPage)) {
                     window.location.href = redirectPage;
-                }
+    }
             })
             .catch(error => {
                 console.error('Error fetching user profile:', error);
@@ -258,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showMessage('Login successful! Redirecting...', 'success');
                 
             // Redirect to appropriate dashboard
-            await redirectToDashboard(data.user);
+            redirectToDashboard(data.user);
             
         } catch (error) {
             console.error('Login error:', error);

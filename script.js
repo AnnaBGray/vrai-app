@@ -119,8 +119,50 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 
+    // Function to track login activity
+    async function trackLoginActivity(userId) {
+        try {
+            console.log('📊 Tracking login activity for user:', userId);
+            
+            // Get user's IP address
+            const ipResponse = await fetch('https://ipinfo.io/json');
+            if (!ipResponse.ok) {
+                throw new Error('Failed to fetch IP address');
+            }
+            const ipData = await ipResponse.json();
+            const ipAddress = ipData.ip || 'Unknown';
+            
+            console.log('📍 IP Address:', ipAddress);
+            
+            // Get browser user agent
+            const userAgent = navigator.userAgent;
+            console.log('🌐 User Agent:', userAgent);
+            
+            // Insert new record into login_activity table
+            const { error } = await supabase
+                .from('login_activity')
+                .insert({
+                    user_id: userId,
+                    ip_address: ipAddress,
+                    user_agent: userAgent,
+                    status: 'This device'
+                });
+            
+            if (error) {
+                console.error('❌ Failed to insert login activity:', error);
+                // Don't throw error here as we still want to redirect
+            } else {
+                console.log('✅ Login activity tracked successfully');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error tracking login activity:', error);
+            // Don't throw error here as we still want to redirect
+        }
+    }
+
     // Function to redirect user to appropriate dashboard
-    function redirectToDashboard(user) {
+    async function redirectToDashboard(user) {
         if (!supabase) return;
         
         // Get user profile from profiles table
@@ -163,6 +205,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.setItem('userId', user.id);
                 localStorage.setItem('displayName', displayName);
                 localStorage.setItem('isAdmin', isAdmin ? 'true' : 'false');
+                
+                // Track login activity
+                await trackLoginActivity(user.id);
                 
                 // Redirect to appropriate dashboard
                 const redirectPage = isAdmin ? 'dashboard-admin.html' : 'dashboard.html';
@@ -213,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showMessage('Login successful! Redirecting...', 'success');
                 
             // Redirect to appropriate dashboard
-            redirectToDashboard(data.user);
+            await redirectToDashboard(data.user);
             
         } catch (error) {
             console.error('Login error:', error);
